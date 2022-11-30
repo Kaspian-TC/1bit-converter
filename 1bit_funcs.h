@@ -11,9 +11,12 @@ typedef struct {
   int sx, sy;
 } OneImage;
 void freeOneImage(OneImage *om);
+void imgDither(Image * img, int factor);
+Image * imgGrayscale(Image * img);
 OneImage* convertImgToOne(Image *img);
 Image* convertOneToImg(OneImage* omg);
 void oneBitOutput(OneImage *omg, char *filename);
 OneImage *read1bitimage(char *filename);
+void oneBitWrite(OneImage *omg, char *filename, char *type);
 
 #endif

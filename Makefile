@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -g 
 INPUT_PPM = anime_image
 1BIT_FILE = anime_image
-PNG_NAME = anime_image
+PNG_NAME = david
 1BIT_VER = .1
 1bit_converter.exe: main_code.c imgutils.o 1bit_funcs.o
 	$(CC) $(CFLAGS) -o $@ main_code.c imgutils.o 1bit_funcs.o

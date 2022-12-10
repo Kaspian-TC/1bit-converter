@@ -57,7 +57,7 @@ static uint8_t calcAvgGrey(Image *img){
 	}
 	return (uint8_t)round(average);
 }
-uint8_t correctError(float input_val){//input value
+static uint8_t correctError(float input_val){//input value
 	if(input_val>255){
 		return 255;
 	}
@@ -66,71 +66,82 @@ uint8_t correctError(float input_val){//input value
 	}
 	return (uint8_t)input_val;
 }
-
+static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 
+	if(x<width && x>=0 && y<height){
+		int index = _INDEX(x,y,width);
+		Pixel c = pixels[index];
+		float r = (float)c.R;
+		float g = (float)c.G;
+		float b = (float)c.B;
+		r += quant_err_R * debt/16.0;
+		g += quant_err_G * debt/16.0;
+		b += quant_err_B * debt/16.0;
+		c.R= correctError(r);
+		c.G= correctError(g);
+		c.B= correctError(b);
+		pixels[index] = c;
+	}
+	return;
+}
 void imgDither(Image * img, int factor){
-	Pixel current_pixel;
 	for(int y = 0; y< img->sy ;y++){
 		for(int x = 0; x< img->sx ;x++){
-			current_pixel = img->data[_INDEX(x,y,img->sx)];
-			float oldR = current_pixel.R;
-			float oldG = current_pixel.G;
-			float oldB = current_pixel.B;
-			
-			uint8_t newR = (uint8_t)round(factor * oldR / 255) * (255/factor);
-			uint8_t newG = (uint8_t)round(factor * oldG / 255) * (255/factor);
-			uint8_t newB = (uint8_t)round(factor * oldB / 255) * (255/factor);
-			Pixel new_pixel;
-			
-			new_pixel.R = newR;
-			new_pixel.G = newG;
-			new_pixel.B = newB;
-			
-			img->data[_INDEX(x,y,img->sx)] = new_pixel;
-			
-			float errR = oldR-newR;
-			float errG = oldG-newG;
-			float errB = oldB-newB;
+			//oldpixel := pixels[x][y]
+			Pixel oldpixel = img->data[_INDEX(x,y,img->sx)];
+			float old_r = oldpixel.R;
+			float old_g = oldpixel.G;
+			float old_b = oldpixel.B;
+			//newpixel := find_closest_palette_color(oldpixel)
+			Pixel newpixel;
+			newpixel.R = (uint8_t)round(factor * old_r / 255) * (255/factor);
+			newpixel.G = (uint8_t)round(factor * old_g / 255) * (255/factor);
+			newpixel.B = (uint8_t)round(factor * old_b / 255) * (255/factor);
+			//pixels[x][y] := newpixel
+			img->data[_INDEX(x,y,img->sx)] = newpixel;
+			//quant_error := oldpixel - newpixel
+			float quant_err_R = old_r-newpixel.R;
+			float quant_err_G = old_g-newpixel.G;
+			float quant_err_B = old_b-newpixel.B;
 			
 			int index;
-			Pixel c;
-			float r;
-			float g;
-			float b;
-			float debt = 5;
-			// printf("%f ",debt);
-			/* for(int i=0;i<4;i++){
-				// printf("%f ",debt);
-				index = _INDEX(x+(i !=0 ? i-2 : 1),y+(i>0),img->sx); // for x value i !=0 ? i-2 : 1 ; for y i>0 ? 1 : 0
-				// printf("%d, %d |",x+(i !=0 ? i-2 : 1),y+(i>0));
-				c = img->data[index];
-				r = (float)c.R;
-				g = (float)c.G;
-				b = (float)c.B;
-				if(i % 2){
-					debt -= 4.0;
-				}
-				else{
-					debt += 2.0;
-				}
-				r += errR * debt/16.0;
-				g += errG * debt/16.0;
-				b += errB * debt/16.0;
-				// printf("%f ",debt);
-				c.R= correctError(r);
-				c.G= correctError(g);
-				c.B= correctError(b);
-				img->data[index] = c;
+			// Pixel c;
+			// float r;
+			// float g;
+			// float b;
+			/* float debt [4] = {7,3,5,1};
+			for(int i=0;i<4;i++){
+				int x_relative_index = x+(i !=0 ? i-2 : 1);//this needs to be seriously renamed
+				int y_relative_index = y+(i>0); */
+				// if(x_relative_index<img->sx && x_relative_index>=0 && y_relative_index<img->sy){
+					/* index = _INDEX(x_relative_index,y_relative_index,img->sx); // for x value i !=0 ? i-2 : 1 ; for y i>0 ? 1 : 0
+					c = img->data[index];
+					r = (float)c.R;
+					g = (float)c.G;
+					b = (float)c.B;
+					r += quant_err_R * debt[i]/16.0;
+					g += quant_err_G * debt[i]/16.0;
+					b += quant_err_B * debt[i]/16.0;
+					c.R= correctError(r);
+					c.G= correctError(g);
+					c.B= correctError(b);
+					img->data[index] = c; */
+				/* 	imgDitherHelper(img->data,x_relative_index,y_relative_index,quant_err_R,quant_err_G,quant_err_B,debt[i],img->sx,img->sy);
+				// }
 			} */
+			imgDitherHelper(img->data,x+1,y,quant_err_R,quant_err_G,quant_err_B,7.0,img->sx,img->sy);
+			imgDitherHelper(img->data,x-1,y+1,quant_err_R,quant_err_G,quant_err_B,3.0,img->sx,img->sy);
+			imgDitherHelper(img->data,x,y+1,quant_err_R,quant_err_G,quant_err_B,5.0,img->sx,img->sy);
+			imgDitherHelper(img->data,x+1,y+1,quant_err_R,quant_err_G,quant_err_B,1.0,img->sx,img->sy);
 			// printf("\n");
-			if(x+1<img->sx){
+			/* if(x+1<img->sx){
 				index = _INDEX(x+1,y,img->sx);
 				c = img->data[index];
 				r = (float)c.R;
 				g = (float)c.G;
 				b = (float)c.B;
-				r += errR * 7.0/16.0;
-				g += errG * 7.0/16.0;
-				b += errB * 7.0/16.0;
+				r += quant_err_R * 7.0/16.0;
+				g += quant_err_G * 7.0/16.0;
+				b += quant_err_B * 7.0/16.0;
 				c.R= correctError(r);
 				c.G= correctError(g);
 				c.B= correctError(b);
@@ -142,9 +153,9 @@ void imgDither(Image * img, int factor){
 				r = (float)c.R;
 				g = (float)c.G;
 				b = (float)c.B;
-				r += errR * 3.0/16.0;
-				g += errG * 3.0/16.0;
-				b += errB * 3.0/16.0;
+				r += quant_err_R * 3.0/16.0;
+				g += quant_err_G * 3.0/16.0;
+				b += quant_err_B * 3.0/16.0;
 				c.R= correctError(r);
 				c.G= correctError(g);
 				c.B= correctError(b);
@@ -156,9 +167,9 @@ void imgDither(Image * img, int factor){
 				r = (float)c.R;
 				g = (float)c.G;
 				b = (float)c.B;
-				r += errR * 5.0/16.0;
-				g += errG * 5.0/16.0;
-				b += errB * 5.0/16.0;
+				r += quant_err_R * 5.0/16.0;
+				g += quant_err_G * 5.0/16.0;
+				b += quant_err_B * 5.0/16.0;
 				c.R= correctError(r);
 				c.G= correctError(g);
 				c.B= correctError(b);
@@ -170,18 +181,18 @@ void imgDither(Image * img, int factor){
 				r = (float)c.R;
 				g = (float)c.G;
 				b = (float)c.B;
-				r += errR * 1.0/16.0;
-				g += errG * 1.0/16.0;
-				b += errB * 1.0/16.0;
+				r += quant_err_R * 1.0/16.0;
+				g += quant_err_G * 1.0/16.0;
+				b += quant_err_B * 1.0/16.0;
 				c.R= correctError(r);
 				c.G= correctError(g);
 				c.B= correctError(b);
 				img->data[index] = c;
-			}
-			// img->data[_INDEX(x+1,y,img->sx)] = c;
-			// img->data[_INDEX(x-1,y+1,img->sx)] = c;
-			// img->data[_INDEX(x,y+1,img->sx)] = c;
-			// img->data[_INDEX(x+1,y+1,img->sx)] = c;
+			} */
+			// pixels[x + 1][y    ] := pixels[x + 1][y    ] + quant_error × 7 / 16
+			// pixels[x - 1][y + 1] := pixels[x - 1][y + 1] + quant_error × 3 / 16
+			// pixels[x    ][y + 1] := pixels[x    ][y + 1] + quant_error × 5 / 16
+			// pixels[x + 1][y + 1] := pixels[x + 1][y + 1] + quant_error × 1 / 16
 			
 		}
 	}
@@ -352,9 +363,8 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) {
 		long size;
 		size = 0;
 		data = runLengthEncode(omg->data,omg->sx,omg->sy,&size);
-		
 		fwrite(data, (size_t)size, sizeof(uint8_t), f);
-		if(data==omg->data){
+		if(size==ceil((float)(omg->sx* omg->sy)/8)){
 			fprintf(stderr, "encoding resulted in negative compression, will now regularly write\n"); 
 			rewind(f);
 			fprintf(f, "1bit.0\n");

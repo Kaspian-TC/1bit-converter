@@ -333,7 +333,7 @@ static uint8_t *runLengthEncode(const uint8_t *data,int x_size,int y_size,long *
 		new_i++;
 	}
 	// printf("%ld %ld\n",i,new_i);
-	if(new_i==length-1){
+	if(new_i>=length-1){
 		copyData(new_data,data,length);
 		*size = length;
 		

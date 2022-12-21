@@ -16,6 +16,7 @@ Image * imgGrayscale(Image * img);
 OneImage* convertImgToOne(Image *img);
 Image* convertOneToImg(OneImage* omg);
 void oneBitOutput(OneImage *omg, char *filename);
+Image *readImage(char *filename);
 OneImage *read1bitimage(char *filename);
 void oneBitWrite(OneImage *omg, char *filename, char *type);
 

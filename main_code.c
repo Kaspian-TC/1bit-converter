@@ -11,10 +11,6 @@ unsigned char fileIsValid(char *filename){// return 1 if valid, 0 otherwise
 	fclose(f);
 	return 1;	
 }
-/* uint8_t dataConvert(){
-	
-	return 0;
-} */
 int main(int argc, char** argv){
 	/* -r : read flag
 	-c : create flag
@@ -63,7 +59,8 @@ int main(int argc, char** argv){
 	// printf("is_read:%d is_create:%d is_upgrade:%d is_dithered:%d filenames: %s, %s version:%s \n",is_read,is_create,is_upgrade,is_dithered,input_file,output_file,file_version);
 	
 	if(is_create){
-		Image *img = readPPMimage(input_file);
+		// Image *img = readPPMimage(input_file);
+		Image *img = readImage(input_file);
 		OneImage *omg;
 		if(is_dithered){
 			Image * gray_img = imgGrayscale(img);
@@ -76,13 +73,11 @@ int main(int argc, char** argv){
 			omg = convertImgToOne(img);
 		}
 		if(file_version != NULL){
-			
 			oneBitWrite(omg, output_file,file_version);
 		}
 		else{
 			oneBitOutput(omg, output_file);
 		}
-		
 		freeOneImage(omg);
 		freeImage(img);
 	}

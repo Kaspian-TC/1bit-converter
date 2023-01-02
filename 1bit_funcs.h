@@ -11,6 +11,7 @@ typedef struct {
   int sx, sy;
 } OneImage;
 void freeOneImage(OneImage *om);
+void imgBayerDither(Image * img);
 void imgDither(Image * img, int factor);
 Image * imgGrayscale(Image * img);
 OneImage* convertImgToOne(Image *img);

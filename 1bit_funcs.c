@@ -66,6 +66,68 @@ static uint8_t correctError(float input_val){//input value
 	}
 	return (uint8_t)input_val;
 }
+void imgBayerDither(Image * img){
+	for(int y = 0; y< img->sy ;y+=2){
+		for(int x = 0; x< img->sx ;x+=2){
+			Pixel centrePix = getPixel(img,_INDEX(x,y,img->sx));
+			if(9*avgRGB(centrePix)/256>0){ 
+				centrePix.R = 255;
+				centrePix.G = 255;
+				centrePix.B = 255;
+			}
+			else{
+				centrePix.R = 0;
+				centrePix.G = 0;
+				centrePix.B = 0;
+			}
+			img->data[_INDEX(x,y,img->sx)] = centrePix;
+			if(x+1 != img->sx){
+				Pixel rightPix = getPixel(img,_INDEX(x+1,y,img->sx));
+				if(9*avgRGB(rightPix)/256>2){ //TODO: check if out of bounds
+					rightPix.R = 255;
+					rightPix.G = 255;
+					rightPix.B = 255;
+				}
+				else{
+					rightPix.R = 0;
+					rightPix.G = 0;
+					rightPix.B = 0;
+				}
+				img->data[_INDEX(x+1,y,img->sx)] = rightPix;
+			}
+			if(y+1 != img->sy){
+				Pixel botPix = getPixel(img,_INDEX(x,y+1,img->sx));
+				if(9*avgRGB(botPix)/256>3){
+					botPix.R = 255;
+					botPix.G = 255;
+					botPix.B = 255;
+				}
+				else{
+					botPix.R = 0;
+					botPix.G = 0;
+					botPix.B = 0;
+				}
+				img->data[_INDEX(x,y+1,img->sx)] = botPix;
+			}
+			if(x+1 != img->sx && y+1 != img->sy){
+				Pixel cornerPix = getPixel(img,_INDEX(x+1,y+1,img->sx));
+				if(9*avgRGB(cornerPix)/256>1){
+					cornerPix.R = 255;
+					cornerPix.G = 255;
+					cornerPix.B = 255;
+				}
+				else{
+					cornerPix.R = 0;
+					cornerPix.G = 0;
+					cornerPix.B = 0;
+				}
+				img->data[_INDEX(x+1,y+1,img->sx)] = cornerPix;
+			}
+		}
+	}
+	return;
+}
+
 static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 
 	if(x<width && x>=0 && y<height){
 		int index = _INDEX(x,y,width);
@@ -83,6 +145,7 @@ static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float q
 	}
 	return;
 }
+
 void imgDither(Image * img, int factor){
 	for(int y = 0; y< img->sy ;y++){
 		for(int x = 0; x< img->sx ;x++){

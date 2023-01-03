@@ -13,6 +13,8 @@ typedef struct {
 void freeOneImage(OneImage *om);
 void imgBayerDither(Image * img);
 void imgDither(Image * img, int factor);
+void imgErrorDither(Image * img, int factor,int *errorKernel,int *locationPositions,int kernelSize);
+void ditherFloydSteinberg(Image * img, int factor);
 Image * imgGrayscale(Image * img);
 OneImage* convertImgToOne(Image *img);
 Image* convertOneToImg(OneImage* omg);

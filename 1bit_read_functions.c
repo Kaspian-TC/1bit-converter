@@ -139,7 +139,7 @@ Image *readImage(char *filename){ // returns the Image type
 	img->sx = width;
 	img->sy = height;
 	if(bpp>3){
-		fprintf(stderr, "Some data might be lost\n");
+		fprintf(stderr, "Transparency layer was lost\n");
 	}
     uint8_t* rgb_image_data = stbi_load(filename, &width, &height, &bpp, 3); // Read file data
 	img->data = (Pixel *) rgb_image_data;

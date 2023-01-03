@@ -64,7 +64,7 @@ int main(int argc, char** argv){
 		OneImage *omg;
 		if(is_dithered){
 			Image * gray_img = imgGrayscale(img);
-			imgBayerDither(gray_img);
+			ditherFloydSteinberg(gray_img,1);
 			imageOutput(gray_img,"TEST_FILE.ppm"); //something to do with the edges
 			omg = convertImgToOne(gray_img); // isn't working for some reason
 			freeImage(gray_img);

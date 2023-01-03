@@ -1,5 +1,7 @@
 #include "1bit_funcs.h"
 #define _INDEX(X,Y,W) ((X) + (Y) * (W))
+/* This code is dedicated to Josh and Lee, but Lee helped more than Josh 
+*/
 void freeOneImage(OneImage *om) {
 	if (om->filename != NULL) free(om->filename);
 	if (om->data != NULL) free(om->data);
@@ -16,8 +18,6 @@ static uint8_t readBit(OneImage* omg,int index){
 		return 1;
 	}
 }
-/* This code is dedicated to Josh and Lee, but Lee helped more than Josh 
-*/
 static uint8_t changeBit(uint8_t byte,int index,char val){//returns the changed byte 
 	//index should only be from 0-7
 	uint8_t bit = 1;
@@ -55,63 +55,42 @@ static uint8_t correctError(float input_val){//input value
 	}
 	return (uint8_t)input_val;
 }
+static double avgRGB(Pixel current_pixel){
+	return (double)(current_pixel.R + current_pixel.G + current_pixel.B)/3;
+}
 void imgBayerDither(Image * img){
 	for(int y = 0; y< img->sy ;y+=2){
 		for(int x = 0; x< img->sx ;x+=2){
-			Pixel centrePix = getPixel(img,_INDEX(x,y,img->sx));
-			if(9*avgRGB(centrePix)/256>0){ 
-				centrePix.R = 255;
-				centrePix.G = 255;
-				centrePix.B = 255;
+			
+			for(int i = 0; i<=1;i++){
+				for(int j = 0; j<=1;j++){
+					int threshhold = 0;
+					if( i==0 && j==1){
+						threshhold = 3;
+					}
+					else if(i==1 && j==0){
+						threshhold = 2;
+					}
+					else if(i+j == 2){
+						threshhold = 1;
+					}
+					if(x+i != img->sx && y+j != img->sy){
+						Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
+						if(4*avgRGB(currentPixel)>(threshhold+1)*255){
+							currentPixel.R = 255;
+							currentPixel.G = 255;
+							currentPixel.B = 255;
+						}
+						else{
+							currentPixel.R = 0;
+							currentPixel.G = 0;
+							currentPixel.B = 0;
+						}
+						img->data[_INDEX(x+i,y+j,img->sx)] = currentPixel;
+					}
+				}
 			}
-			else{
-				centrePix.R = 0;
-				centrePix.G = 0;
-				centrePix.B = 0;
-			}
-			img->data[_INDEX(x,y,img->sx)] = centrePix;
-			if(x+1 != img->sx){
-				Pixel rightPix = getPixel(img,_INDEX(x+1,y,img->sx));
-				if(9*avgRGB(rightPix)/256>2){ //TODO: check if out of bounds
-					rightPix.R = 255;
-					rightPix.G = 255;
-					rightPix.B = 255;
-				}
-				else{
-					rightPix.R = 0;
-					rightPix.G = 0;
-					rightPix.B = 0;
-				}
-				img->data[_INDEX(x+1,y,img->sx)] = rightPix;
-			}
-			if(y+1 != img->sy){
-				Pixel botPix = getPixel(img,_INDEX(x,y+1,img->sx));
-				if(9*avgRGB(botPix)/256>3){
-					botPix.R = 255;
-					botPix.G = 255;
-					botPix.B = 255;
-				}
-				else{
-					botPix.R = 0;
-					botPix.G = 0;
-					botPix.B = 0;
-				}
-				img->data[_INDEX(x,y+1,img->sx)] = botPix;
-			}
-			if(x+1 != img->sx && y+1 != img->sy){
-				Pixel cornerPix = getPixel(img,_INDEX(x+1,y+1,img->sx));
-				if(9*avgRGB(cornerPix)/256>1){
-					cornerPix.R = 255;
-					cornerPix.G = 255;
-					cornerPix.B = 255;
-				}
-				else{
-					cornerPix.R = 0;
-					cornerPix.G = 0;
-					cornerPix.B = 0;
-				}
-				img->data[_INDEX(x+1,y+1,img->sx)] = cornerPix;
-			}
+			
 		}
 	}
 	return;
@@ -164,9 +143,42 @@ void imgDither(Image * img, int factor){
 	
 	return;
 }
-
-static double avgRGB(Pixel current_pixel){
-	return (double)(current_pixel.R + current_pixel.G + current_pixel.B)/3;
+void imgErrorDither(Image * img, int factor,int *errorKernel,int *locationPositions,int kernelSize){
+	for(int y = 0; y< img->sy ;y++){
+		for(int x = 0; x< img->sx ;x++){
+			
+			Pixel oldpixel = img->data[_INDEX(x,y,img->sx)]; //oldpixel := pixels[x][y]
+			float old_r = oldpixel.R;
+			float old_g = oldpixel.G;
+			float old_b = oldpixel.B;
+			
+			Pixel newpixel; //newpixel := find_closest_palette_color(oldpixel)
+			newpixel.R = (uint8_t)round(factor * old_r / 255) * (255/factor);
+			newpixel.G = (uint8_t)round(factor * old_g / 255) * (255/factor);
+			newpixel.B = (uint8_t)round(factor * old_b / 255) * (255/factor);
+			
+			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y] := newpixel
+			
+			float quant_err_R = old_r-newpixel.R; //quant_error := oldpixel - newpixel
+			float quant_err_G = old_g-newpixel.G;
+			float quant_err_B = old_b-newpixel.B;
+			
+			for(int i = 0;i<kernelSize;i++){
+				imgDitherHelper(img->data,x+locationPositions[2*i],y+locationPositions[2*i+1],quant_err_R,quant_err_G,quant_err_B,errorKernel[i],img->sx,img->sy);
+			}
+		}
+	}
+	
+	return;
+}
+void ditherFloydSteinberg(Image * img, int factor){
+	int errorKernel[4] = {7,3,5,1};
+	int locationPositions[4][2] = 
+	{
+		{1,0},{-1,1},{0,1},{1,1}
+	};
+	imgErrorDither(img,factor,errorKernel,locationPositions[0],4);
+	return;
 }
 Image * imgGrayscale(Image * img){//returns grayscale of img
 	Image *gray_img = newImage(img->sx,img->sy);

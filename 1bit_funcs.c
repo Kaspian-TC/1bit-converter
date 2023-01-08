@@ -143,7 +143,7 @@ void imgDither(Image * img, int factor){
 	
 	return;
 }
-void imgErrorDither(Image * img, int factor,int *errorKernel,int *locationPositions,int kernelSize){
+void imgErrorDither(Image * img, int factor,int *error_kernel,int *location_positions,int kernelSize){
 	for(int y = 0; y< img->sy ;y++){
 		for(int x = 0; x< img->sx ;x++){
 			
@@ -164,7 +164,7 @@ void imgErrorDither(Image * img, int factor,int *errorKernel,int *locationPositi
 			float quant_err_B = old_b-newpixel.B;
 			
 			for(int i = 0;i<kernelSize;i++){
-				imgDitherHelper(img->data,x+locationPositions[2*i],y+locationPositions[2*i+1],quant_err_R,quant_err_G,quant_err_B,errorKernel[i],img->sx,img->sy);
+				imgDitherHelper(img->data,x+location_positions[2*i],y+location_positions[2*i+1],quant_err_R,quant_err_G,quant_err_B,error_kernel[i],img->sx,img->sy);
 			}
 		}
 	}
@@ -172,12 +172,12 @@ void imgErrorDither(Image * img, int factor,int *errorKernel,int *locationPositi
 	return;
 }
 void ditherFloydSteinberg(Image * img, int factor){
-	int errorKernel[4] = {7,3,5,1};
-	int locationPositions[4][2] = 
+	int error_kernel[4] = {7,3,5,1};
+	int location_positions[4][2] = 
 	{
 		{1,0},{-1,1},{0,1},{1,1}
 	};
-	imgErrorDither(img,factor,errorKernel,locationPositions[0],4);
+	imgErrorDither(img,factor,error_kernel,location_positions[0],4);
 	return;
 }
 Image * imgGrayscale(Image * img){//returns grayscale of img

@@ -65,7 +65,6 @@ int main(int argc, char** argv){
 		fprintf(stderr,"input file path invalid or doesn't exist\n");
 		return 1;
 	}
-	// printf("is_read:%d is_create:%d is_upgrade:%d is_dithered:%d filenames: %s, %s version:%s \n",is_read,is_create,is_upgrade,is_dithered,input_file,output_file,file_version);
 	
 	if(is_create){
 		Image *img = readImage(input_file);
@@ -85,7 +84,7 @@ int main(int argc, char** argv){
 				// freeImage(gray_img);
 			}
 			else if(strcmp(upper_dither_type,"BAYER-0")==0){
-				imgBayerDither(img);
+				imgBayerZero(img);
 			}
 			else{ // error, end program
 				fprintf(stderr,"invalid dithering type specified\n");

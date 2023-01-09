@@ -58,25 +58,16 @@ static uint8_t correctError(float input_val){//input value
 static double avgRGB(Pixel current_pixel){
 	return (double)(current_pixel.R + current_pixel.G + current_pixel.B)/3;
 }
-void imgBayerDither(Image * img){
+void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
 	for(int y = 0; y< img->sy ;y+=2){
 		for(int x = 0; x< img->sx ;x+=2){
 			
-			for(int i = 0; i<=1;i++){
-				for(int j = 0; j<=1;j++){
-					int threshhold = 0;
-					if( i==0 && j==1){
-						threshhold = 3;
-					}
-					else if(i==1 && j==0){
-						threshhold = 2;
-					}
-					else if(i+j == 2){
-						threshhold = 1;
-					}
+			for(int i = 0; i<x_size;i++){
+				for(int j = 0; j<y_size;j++){
+					int threshhold = threshhold_map[i+j*x_size];
 					if(x+i != img->sx && y+j != img->sy){
 						Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
-						if(4*avgRGB(currentPixel)>(threshhold+1)*255){
+						if(threshhold_range*avgRGB(currentPixel)>(threshhold+1)*255){// +1 to focus on the darker images 
 							currentPixel.R = 255;
 							currentPixel.G = 255;
 							currentPixel.B = 255;
@@ -95,7 +86,15 @@ void imgBayerDither(Image * img){
 	}
 	return;
 }
-
+void imgBayerZero(Image * img){
+	int bayerMatrix[2][2] = 
+	{
+		{0,2},
+		{3,1}
+	};
+	imgThreshholdMapDither(img,bayerMatrix[0],2,2,4);
+	return;
+}
 static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 
 	if(x<width && x>=0 && y<height){
 		int index = _INDEX(x,y,width);

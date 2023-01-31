@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "imgutils.h"//TODO: remove later
-
+#ifndef __1BIT_FUNCS_H__
 typedef struct {
   char *filename;
   uint8_t *data;
   int sx, sy;
 } OneImage;
+#endif
 Image *readImage(char *filename);
 OneImage *read1bitimage(char *filename);
 #endif

@@ -39,12 +39,12 @@ static void assignBit(OneImage* omg, long index,char val){//bit should only be 1
 	omg->data[(index)/8] = changeBit(current_byte,(index)%8,val);
 	return;
 }
-static void copyData(uint8_t *dest, const uint8_t *src,long length){
+/* static void copyData(uint8_t *dest, const uint8_t *src,long length){
 	for(int i = 0;i<length;i++){
 		dest[i] = src[i];
 	}
 	return;
-}
+} */
 
 static uint8_t correctError(float input_val){//input value
 	if(input_val>255){
@@ -261,9 +261,9 @@ Image* convertOneToImg(OneImage* omg){
 	return (NULL);
 }
 
-static uint8_t *runLengthEncode(const uint8_t *data,int x_size,int y_size,long *size){ //encodes the data with run length encoding
+/* static uint8_t *runLengthEncode(const uint8_t *data,int x_size,int y_size,long *size){ //encodes the data with run length encoding
 	//if there is negative compression, makes new_data identical to data
-	/*aaaabbbbcdddddee will become aa4bb4cdd5ee2 unless there is negative compression in which case it will exit with NULL*/
+	//aaaabbbbcdddddee will become aa4bb4cdd5ee2 unless there is negative compression in which case it will exit with NULL
 	int length = ceil((float)(x_size* y_size)/8);
 	uint8_t *new_data = calloc((size_t)length, sizeof(uint8_t));
 	if(data == NULL){
@@ -366,3 +366,4 @@ void oneBitOutput(OneImage *omg, char *filename){ //keeps older compatability
 	oneBitWrite(omg,filename,"");// makes the 1bit.0 file
 	return;
 }
+*/

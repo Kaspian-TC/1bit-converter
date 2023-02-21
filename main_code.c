@@ -88,6 +88,9 @@ int main(int argc, char** argv){
 			else if(strcmp(upper_dither_type,"BAYER-0")==0){
 				imgBayerZero(img);
 			}
+			else if(strcmp(upper_dither_type,"BAYER-1")==0){
+				imgBayerOne(img);
+			}
 			else{ // error, end program
 				fprintf(stderr,"invalid dithering type specified\n");
 				freeImage(img);

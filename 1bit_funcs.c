@@ -59,8 +59,8 @@ static double avgRGB(Pixel current_pixel){
 	return (double)(current_pixel.R + current_pixel.G + current_pixel.B)/3;
 }
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
-	for(int y = 0; y< img->sy ;y+=2){
-		for(int x = 0; x< img->sx ;x+=2){
+	for(int y = 0; y< img->sy ;y+=y_size){
+		for(int x = 0; x< img->sx ;x+=x_size){
 			
 			for(int i = 0; i<x_size;i++){
 				for(int j = 0; j<y_size;j++){
@@ -93,6 +93,17 @@ void imgBayerZero(Image * img){
 		{3,1}
 	};
 	imgThreshholdMapDither(img,bayerMatrix[0],2,2,4);
+	return;
+}
+void imgBayerOne(Image * img){ //these are cool but I need to generalize this
+	int bayerMatrix[4][4] = 
+	{
+		{0,8,2,10},
+		{12,4,14,6},
+		{3,11,1,9},
+		{15,7,13,5}
+	};
+	imgThreshholdMapDither(img,bayerMatrix[0],4,4,16);
 	return;
 }
 static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 

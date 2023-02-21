@@ -13,6 +13,7 @@ typedef struct {
 void freeOneImage(OneImage *om);
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range);
 void imgBayerZero(Image * img);
+void imgBayerOne(Image * img);
 void imgDither(Image * img, int factor);
 void imgErrorDither(Image * img, int factor,int *errorKernel,int *locationPositions,int kernelSize);
 void ditherFloydSteinberg(Image * img, int factor);

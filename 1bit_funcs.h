@@ -5,11 +5,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "imgutils.h"
+#include "1bit_types.h"
+#ifndef __1BIT_TYPES__
+#define __1BIT_TYPES__
 typedef struct {
   char *filename;         
   uint8_t *data; // Actual data
   int sx, sy;
 } OneImage;
+#endif
 void freeOneImage(OneImage *om);
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range);
 void imgBayerZero(Image * img);

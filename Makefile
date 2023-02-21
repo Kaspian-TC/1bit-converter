@@ -21,7 +21,7 @@ read: 1bit_converter.exe
 upgrade: 1bit_converter.exe
 	$^ -i "1bit images"/$(1BIT_FILE).1bit $(1BIT_FILE)_2.1bit -u $(1BIT_VER)
 png: 1bit_converter.exe
-	$^ -i "png images"/$(PNG_NAME) "1bit images"/$(PNG_NAME).1bit -c $(1BIT_VER) -d bayer-0
+	$^ -i "png images"/$(PNG_NAME) "1bit images"/$(PNG_NAME).1bit -c $(1BIT_VER) -d bayer-1
 	$^ -i "1bit images"/$(PNG_NAME).1bit $(PNG_NAME)_2.ppm -r
 	ffmpeg -i $(PNG_NAME)_2.ppm "PNG images"/1bit_$(PNG_NAME).png -loglevel quiet -y
 	del $(PNG_NAME)_2.ppm

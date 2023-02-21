@@ -1,11 +1,12 @@
 #include <stdio.h>
-#include "imgutils.h"
+// #include "imgutils.h"
 #include "1bit_funcs.h"
+#include <string.h> 
 char * toUpper(char * s){ //changes the string to be uppercase only
 	for(int i = 0; s[i]!='\0';i++){
 		if(s[i]>='a' && s[i]<='z'){
 			s[i] -= 32; //converts to upper case letter
-		}
+		} 
 	}
 	return s;
 }

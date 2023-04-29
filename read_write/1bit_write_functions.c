@@ -1,5 +1,5 @@
-#include "1bit_funcs.h"
-// #include "1bit_read_functions.h"
+// #include "1bit_funcs.h"
+#include "1bit_write_functions.h"
 #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h" //this should only be included here since this is the WRITE file
@@ -10,6 +10,7 @@ static void copyData(uint8_t *dest, const uint8_t *src,long length){
 	}
 	return;
 }
+
 static uint8_t *runLengthEncode(const uint8_t *data,int x_size,int y_size,long *size){ //encodes the data with run length encoding
 	//if there is negative compression, makes new_data identical to data
 	/*aaaabbbbcdddddee will become aa4bb4cdd5ee2 unless there is negative compression in which case it will exit with NULL*/

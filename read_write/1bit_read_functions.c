@@ -1,5 +1,5 @@
-#include "1bit_funcs.h"
-// #include "1bit_read_functions.h"
+// #include "1bit_funcs.h"
+#include "1bit_read_functions.h"
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
@@ -8,6 +8,16 @@
 #include "stb_image.h" //this should only be included here since this is the READ file
 #endif
  // TODO: credit nothings/stb 
+static char *basename(char *path) {
+  int l = strlen(path)-1;
+  for (int i = l; i >= 0; i--) {
+    if (path[i] == '/' || path[i] == '\\') {
+      return &path[i+1];
+    }
+  }
+  return path;
+} 
+ 
 static char assignValues(uint8_t *data,const long pos_1,const int amount, const long length, const uint8_t value){//helper function for runLengthDecode
 	if(pos_1+amount>=length){
 		return 0;// fail

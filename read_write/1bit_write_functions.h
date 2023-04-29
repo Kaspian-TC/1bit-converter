@@ -4,13 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "imgutils.h"//TODO: remove later
+#include "../1bit_types.h"
+// #include "../imgutils.h"//TODO: remove later
 #ifndef __1BIT_FUNCS_H__
-typedef struct {
+/* typedef struct {
   char *filename;
   uint8_t *data;
   int sx, sy;
-} OneImage;
+} OneImage; */
 #endif
 void writeImage(Image *img, char *filename);
 void oneBitOutput(OneImage *omg, char *filename);

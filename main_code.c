@@ -2,8 +2,9 @@
 // #include "imgutils.h"
 #include "1bit_funcs.h" 
 #include <string.h> 
-#include "1bit_read_functions.h"
-#include "1bit_write_functions.h" //something is terribly wrong here, I did not properly use header files
+#include "read_write/1bit_read_functions.h"
+#include "read_write/1bit_write_functions.h"
+
 char * toUpper(char * s){ //changes the string to be uppercase only
 	for(int i = 0; s[i]!='\0';i++){
 		if(s[i]>='a' && s[i]<='z'){
@@ -82,9 +83,6 @@ int main(int argc, char** argv){
 			toUpper(upper_dither_type);
 			if(strcmp(upper_dither_type,"FLOYD-STEINBERG")==0){ //check what form of dithering it uses
 				ditherFloydSteinberg(img,1);
-				// imageOutput(gray_img,"TEST_FILE.ppm"); //something to do with the edges
-				// omg = convertImgToOne(gray_img); // isn't working for some reason
-				// freeImage(gray_img);
 			}
 			else if(strcmp(upper_dither_type,"BAYER-0")==0){
 				imgBayerZero(img);
@@ -92,11 +90,17 @@ int main(int argc, char** argv){
 			else if(strcmp(upper_dither_type,"BAYER-1")==0){
 				imgBayerOne(img);
 			}
+			else if(strcmp(upper_dither_type,"BAYER-2")==0){
+				imgBayerTwo(img);
+			}
 			else{ // error, end program
 				fprintf(stderr,"invalid dithering type specified\n");
 				freeImage(img);
 				return 1;
 			}
+		}
+		else{
+			averageColourImage(img);
 		}
 		omg = convertImgToOne(img); //always finds the average and threshhold dithers
 		

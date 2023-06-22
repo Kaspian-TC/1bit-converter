@@ -18,7 +18,7 @@ OBJS = $(SRCS:.c=.o)
 # Define the source files and object files
 
 # Define the main target
-1bit_converter: $(OBJS)
+1bit_converter.exe: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Define the pattern rule for compiling .c files into .o files
@@ -34,7 +34,7 @@ $(SUBDIR)/%.o: $(SUBDIR)/%.c
 
 INPUT_PPM = anime_image
 1BIT_FILE = anime_image
-PNG_NAME = david.png
+PNG_NAME = Spirited_Sea.png
 1BIT_VER = .1
 
 create: 1bit_converter.exe

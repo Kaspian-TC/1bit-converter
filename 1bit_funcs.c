@@ -61,7 +61,7 @@ void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_si
 			for(int i = 0; i<x_size;i++){
 				for(int j = 0; j<y_size;j++){
 					int threshhold = threshhold_map[i+j*x_size];
-					if(x+i != img->sx && y+j != img->sy){
+					if(x+i < img->sx && y+j < img->sy){
 						Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
 						if(threshhold_range*pixelSum(currentPixel)>(threshhold+0)*765){// +1 to focus on the darker images 
 							currentPixel = (Pixel) {255,255,255};
@@ -140,14 +140,14 @@ void imgErrorDither(Image * img, int factor,int *error_kernel,int *location_posi
 			float old_g = oldpixel.G;
 			float old_b = oldpixel.B;
 			
-			Pixel newpixel; //newpixel := find_closest_palette_color(oldpixel)
+			Pixel newpixel; //newpixelï¿½:= find_closest_palette_color(oldpixel)
 			newpixel.R = (uint8_t)round(factor * old_r / 255) * (255/factor);
 			newpixel.G = (uint8_t)round(factor * old_g / 255) * (255/factor);
 			newpixel.B = (uint8_t)round(factor * old_b / 255) * (255/factor);
 			
-			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y] := newpixel
+			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y]ï¿½:= newpixel
 			
-			float quant_err_R = old_r-newpixel.R; //quant_error := oldpixel - newpixel
+			float quant_err_R = old_r-newpixel.R; //quant_errorï¿½:= oldpixel - newpixel
 			float quant_err_G = old_g-newpixel.G;
 			float quant_err_B = old_b-newpixel.B;
 			

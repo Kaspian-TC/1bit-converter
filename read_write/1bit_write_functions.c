@@ -117,7 +117,7 @@ static uint8_t* runLengthEncode(const uint8_t* data,int x_size,int y_size,long* 
  * @param head_priority 
  * @param current_run 
  */
-static void assignEncodedBits(uint16_t * encoded_bits, long * number_of_hits,
+static void assignEncodedBits(uint16_t * encoded_bits, unsigned long * number_of_hits,
 			Leaf * combined_leaves, int size,int head_id,float head_priority,
 			uint16_t current_run){
 	if(head_id < size){
@@ -128,8 +128,43 @@ static void assignEncodedBits(uint16_t * encoded_bits, long * number_of_hits,
 	/* Find the left and right then recurse, make sure to bit shift and add 1 if right, 0 if left */
 	/* Make sure to add 1 at the start  */
 }
-static uint8_t *huffmanEncode(const uint8_t *data,int byte_length,long *size){
+/**
+ * @brief This function creates a new leaf and returns the leaf value. It makes
+ * sure that the leaf with the higher priority is on the right.
+ * @param new_leaf_id 
+ * @param leaf1_id 
+ * @param leaf2_id 
+ * @param leaf1_priority 
+ * @param leaf2_priority 
+ * @return the new leaf
+ */
+static Leaf assignNewLeaf(const int new_leaf_id,const int leaf1_id,
+						const int leaf2_id,
+						const float leaf1_priority,
+						const float leaf2_priority){
+	float new_leaf_priority = leaf1_priority + leaf2_priority;
+	Leaf new_leaf;
+	if(leaf1_priority > leaf2_priority){
+		new_leaf = (Leaf) {
+		new_leaf_id, 
+		new_leaf_priority,
+		{leaf2_id,leaf1_id},
+		{leaf2_priority,leaf1_priority}
+		};
+	}
+	else{
+		new_leaf = (Leaf) {
+		new_leaf_id, 
+		new_leaf_priority,
+		{leaf1_id,leaf2_id},
+		{leaf1_priority,leaf2_priority}
+		};
+	}
+	return new_leaf;
+}
+static uint8_t* huffmanEncode(const uint8_t* data,int byte_length,long* size){
 	const int length = byte_length;
+	/* Make heap_size =2*256 because that is the max amount of possible  */
 	const int heap_size = 256;
 	MinHeap * min_heap = newMinHeap(heap_size);
 	unsigned long number_of_hits[heap_size];
@@ -160,13 +195,14 @@ static uint8_t *huffmanEncode(const uint8_t *data,int byte_length,long *size){
 	int current_leaf_id = 256;
 	// TODO: While loop should be in a function
 	while(heapSize(min_heap) > 1){
-		double right_leaf_priority, left_leaf_priority;
-		int right_leaf_id = heapExtractMin(min_heap,&right_leaf_priority);
-		int left_leaf_id = heapExtractMin(min_heap,&left_leaf_priority);
-		assert(right_leaf_id != -1 && left_leaf_id != -1);
+		printf("heap size: %d\n",heapSize(min_heap));
+		double leaf1_priority, leaf2_priority;
+		int leaf1_id = heapExtractMin(min_heap,&leaf1_priority);
+		int leaf2_id = heapExtractMin(min_heap,&leaf2_priority);
+		assert(leaf1_id != -1 && leaf2_id != -1);
 
 		int new_leaf_id = current_leaf_id++;
-		float new_leaf_priority = right_leaf_priority + left_leaf_priority;
+		/*float new_leaf_priority = right_leaf_priority + left_leaf_priority;
 		Leaf new_leaf;
 		if(right_leaf_priority > left_leaf_priority){
 			new_leaf = (Leaf) {
@@ -183,9 +219,14 @@ static uint8_t *huffmanEncode(const uint8_t *data,int byte_length,long *size){
 			{right_leaf_id,left_leaf_id},
 			{right_leaf_priority,left_leaf_priority}
 			};
-		}
-		combined_leaves[current_leaf_id-current_leaf_id] = new_leaf;
+		}*/
+		Leaf new_leaf = assignNewLeaf(new_leaf_id,leaf1_id,leaf2_id,
+									leaf1_priority,leaf2_priority);
+		combined_leaves[current_leaf_id-256] = new_leaf;
+		
+		printLeaf(new_leaf);
 		heapPush(min_heap,new_leaf.id,new_leaf.priority);
+		
 	}
 	double head_priority;
 	int head_id = heapExtractMin(min_heap,&head_priority);
@@ -195,9 +236,6 @@ static uint8_t *huffmanEncode(const uint8_t *data,int byte_length,long *size){
 			encoded_bits[index] = findBitRun()
 		} 
 	}*/
-	for(int i = 0; i < 256; i++){
-		printLeaf(combined_leaves[i]);
-	}
 	assignEncodedBits(encoded_bits,number_of_hits,combined_leaves,256,head_id,head_priority,1);
 
 	return NULL; // TODO: this should not be NULL

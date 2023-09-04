@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "imgutils.h"
-#include "1bit_types.h"
+#include "data_types/1bit_types.h"
 #ifndef __1BIT_TYPES__
 #define __1BIT_TYPES__
 typedef struct {

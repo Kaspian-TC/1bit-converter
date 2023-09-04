@@ -30,6 +30,8 @@ int main(int argc, char** argv){
 	-d : precides dithering type
 	-co : colour flag for create, must be followed by two hexidecimals in form #XXXXXX
 	*/
+
+
 	char is_read = 0;
 	char is_create = 0;
 	char is_upgrade = 0;

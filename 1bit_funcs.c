@@ -73,7 +73,6 @@ void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_si
 					}
 				}
 			}
-			
 		}
 	}
 	return;
@@ -120,7 +119,7 @@ static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float q
 		float r = (float)c.R;
 		float g = (float)c.G;
 		float b = (float)c.B;
-		r += quant_err_R * debt/16.0;
+		r += quant_err_R * debt/16.0; // why are we dividing by 16?
 		g += quant_err_G * debt/16.0;
 		b += quant_err_B * debt/16.0;
 		c.R= correctError(r);

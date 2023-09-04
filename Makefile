@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g 
-SRCS = main_code.c 1bit_funcs.c imgutils.c read_write/1bit_read_functions.c read_write/1bit_write_functions.c
+SRCS = main_code.c 1bit_funcs.c imgutils.c read_write/1bit_read_functions.c read_write/1bit_write_functions.c data_types/minheap.c data_types/1bit_types.c
 OBJS = $(SRCS:.c=.o)
 
 # 1bit_converter.exe: main_code.c imgutils.o 1bit_funcs.o 1bit_read_functions.o 1bit_write_functions.o
@@ -32,13 +32,13 @@ SUBDIR = read_write
 $(SUBDIR)/%.o: $(SUBDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-INPUT_PPM = anime_image
+INPUT_PPM = david
 1BIT_FILE = anime_image
 PNG_NAME = Spirited_Sea.png
-1BIT_VER = .1
+1BIT_VER = .2
 
 create: 1bit_converter.exe
-	$^ -i "ppm images"/$(INPUT_PPM).ppm "1bit images"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) -d
+	$^ -i "ppm images"/$(INPUT_PPM).ppm "1bit images"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) 
 read: 1bit_converter.exe
 	$^ -i "1bit images"/$(1BIT_FILE).1bit "ppm images"/$(1BIT_FILE)_test.ppm -r
 upgrade: 1bit_converter.exe
@@ -48,8 +48,9 @@ png: 1bit_converter.exe
 	$^ -i "1bit images"/$(PNG_NAME).1bit "PNG images"/1bit_$(PNG_NAME).png -r
 gdb: 1bit_converter.exe
 	gdb 1bit_converter.exe
+gdb-create:
+	gdb 1bit_converter.exe -ex "run -i \"ppm images\"/$(INPUT_PPM).ppm \"1bit images\"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER)"
 clean:
-	$(MAKE) clean -C read_write
 	del 1bit_converter.exe
-	del *.o
+	del /s *.o
 	

@@ -71,7 +71,7 @@ OneImage *read1bitimage(char *filename) {
 		char type;
 		FILE *f = fopen(filename, "rb+");
 		if (f == NULL) {
-			fprintf(stderr,"Unable to open file %s. Check the path.\n",filename);
+			fprintf(stderr,"Unable to open file %s in read1bitimage. Check the path.\n",filename);
 			exit(1);
 		}
 		char *shortend_filename = basename(filename); 

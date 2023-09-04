@@ -1,5 +1,8 @@
 #ifndef __1BIT_TYPES__
 #define __1BIT_TYPES__
+#include <math.h>
+#include <stdio.h>
+#include <stdint.h>
 #ifndef __IMGUTILS_H__
 typedef struct {
   uint8_t R;
@@ -17,5 +20,5 @@ typedef struct {
   uint8_t *data; // Actual data
   int sx, sy;
 } OneImage;
-
+int getOneImageByteLength(OneImage *omg);
 #endif

@@ -11,17 +11,41 @@ typedef struct leaf
 {
 	int id;
 	float priority;
-	int children[2];
-	float child_priorities[2];
-}Leaf;
+	// int children[2];
+	int left_id,right_id;
+	float left_priority,right_priority;
+	// float child_priorities[2];
+}TreeNode;
+void printBinary(uint16_t number){
+	for(int i = 15;i>=0;i--){
+		printf("%d",number>>i & 1);
+	}
+	return;
+}
 
-void printLeaf(Leaf leaf){
+void printLeaf(TreeNode leaf){
 	printf("id: %d\n",leaf.id);
 	printf("priority: %f\n",leaf.priority);
-	printf("children: left: %d right: %d\n",leaf.children[0],leaf.children[1]);
-	printf("child_priorities: left: %f right:%f\n",leaf.child_priorities[0],
-	leaf.child_priorities[1]);
+	printf("children: left: %d right: %d\n",leaf.left_id,leaf.right_id);
+	printf("child_priorities: left: %f right:%f\n",leaf.left_priority,
+	leaf.right_priority);
 
+	return;
+}
+void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
+	if(head_id < size){ //one of the leaf nodes
+		// printf("\n");
+		printf("leaf: %c\n",head_id);
+		return;
+	}
+	TreeNode head = combined_leaves[head_id-size];
+	printf("%03d ",head_id);
+	printTree(combined_leaves,size,head.left_id,depth+1);
+	
+	for(int i = 0;i<depth;i++){
+		printf("    ");
+	}
+	printTree(combined_leaves,size,head.right_id,depth+1);
 	return;
 }
 static void copyData(uint8_t* dest, const uint8_t* src,long length){
@@ -98,12 +122,6 @@ static uint8_t* runLengthEncode(const uint8_t* data,int x_size,int y_size,long* 
 	*size = new_i;
 	return new_data;
 }
-/**
- * assignEncodedBits holds a run (current_run) that represents the current run STARTING AFTER the first 1.
- * ie 00101001 represents 01001. 8 bit runs will have to use 9 bits.
-*/
-
-
 
 /**
  * @brief assignEncodedBits holds a run (current_run) that represents the 
@@ -117,16 +135,34 @@ static uint8_t* runLengthEncode(const uint8_t* data,int x_size,int y_size,long* 
  * @param head_priority 
  * @param current_run 
  */
-static void assignEncodedBits(uint16_t * encoded_bits, unsigned long * number_of_hits,
-			Leaf * combined_leaves, int size,int head_id,float head_priority,
+static void assignEncodedBits(uint16_t * encoded_bits,
+			TreeNode* combined_leaves, int size,int head_id,float head_priority,
 			uint16_t current_run){
-	if(head_id < size){
+	printf("start: head_id: %d head_priority: %f \n",head_id,head_priority);
+	if(head_id < size){ //one of the leaf nodes
 		assert(current_run != 1);
 		encoded_bits[head_id] = current_run;
+		printf("head_id: %c current_run:",head_id);
+		printBinary(current_run);
+		printf("\n");
 		return;
 	}
 	/* Find the left and right then recurse, make sure to bit shift and add 1 if right, 0 if left */
-	/* Make sure to add 1 at the start  */
+
+	TreeNode head = combined_leaves[head_id-size];
+	/* Call left child */
+	uint16_t left_run = current_run << 1 | 0; //bit shift left and add 0
+	// printf("head_id: %d left_id: %d, right_id:%d ",head.id,head.left_id,head.right_id);
+	// printBinary(current_run);
+	// printf("\n");
+	assignEncodedBits(encoded_bits,combined_leaves,size,head.left_id,
+	head.left_priority,left_run);
+	/* Call right child */
+	uint16_t right_run = current_run << 1 | 1; //bit shift left and add 1
+	assignEncodedBits(encoded_bits,combined_leaves,size,head.right_id,
+	head.right_priority,right_run);
+	
+	return;
 }
 /**
  * @brief This function creates a new leaf and returns the leaf value. It makes
@@ -138,26 +174,27 @@ static void assignEncodedBits(uint16_t * encoded_bits, unsigned long * number_of
  * @param leaf2_priority 
  * @return the new leaf
  */
-static Leaf assignNewLeaf(const int new_leaf_id,const int leaf1_id,
+static TreeNode assignNewLeaf(const int new_leaf_id,const int leaf1_id,
 						const int leaf2_id,
 						const float leaf1_priority,
 						const float leaf2_priority){
 	float new_leaf_priority = leaf1_priority + leaf2_priority;
-	Leaf new_leaf;
+	TreeNode new_leaf;
+	
 	if(leaf1_priority > leaf2_priority){
-		new_leaf = (Leaf) {
-		new_leaf_id, 
-		new_leaf_priority,
-		{leaf2_id,leaf1_id},
-		{leaf2_priority,leaf1_priority}
+		new_leaf = (TreeNode) {
+			new_leaf_id, // int id
+			new_leaf_priority, // float priority;
+			leaf2_id,leaf1_id, // int left_id,right_id;
+			leaf2_priority,leaf1_priority // float left_priority,right_priority;
 		};
 	}
 	else{
-		new_leaf = (Leaf) {
-		new_leaf_id, 
-		new_leaf_priority,
-		{leaf1_id,leaf2_id},
-		{leaf1_priority,leaf2_priority}
+		new_leaf = (TreeNode) {
+			new_leaf_id, 
+			new_leaf_priority,
+			leaf1_id,leaf2_id,
+			leaf1_priority,leaf2_priority
 		};
 	}
 	return new_leaf;
@@ -179,7 +216,7 @@ static uint8_t* huffmanEncode(const uint8_t* data,int byte_length,long* size){
 	unsigned long total_zero_values = 0;
 	for (int i = 0; i < heap_size; i++) {
 		if(number_of_hits[i] > 0){
-			printf("%d: %ld\n",i,number_of_hits[i]);
+			// printf("%d: %ld\n",i,number_of_hits[i]);
 			heapPush(min_heap,i,number_of_hits[i]);
 		}
 		else{
@@ -191,21 +228,22 @@ static uint8_t* huffmanEncode(const uint8_t* data,int byte_length,long* size){
 		" Huffman encoding is redundant");
 		return NULL;
 	}
-	Leaf combined_leaves[256];
+	TreeNode combined_leaves[256];
 	int current_leaf_id = 256;
 	// TODO: While loop should be in a function
 	while(heapSize(min_heap) > 1){
-		printf("heap size: %d\n",heapSize(min_heap));
 		double leaf1_priority, leaf2_priority;
 		int leaf1_id = heapExtractMin(min_heap,&leaf1_priority);
 		int leaf2_id = heapExtractMin(min_heap,&leaf2_priority);
+		printf("leaf1_id: %d leaf2_id: %d\n",leaf1_id,leaf2_id);
+		printf("leaf1_priority: %.1f leaf2_priority: %.1f\n",leaf1_priority,leaf2_priority);
 		assert(leaf1_id != -1 && leaf2_id != -1);
 
-		int new_leaf_id = current_leaf_id++;
+		int new_leaf_id = current_leaf_id;
 		/*float new_leaf_priority = right_leaf_priority + left_leaf_priority;
-		Leaf new_leaf;
+		TreeNode new_leaf;
 		if(right_leaf_priority > left_leaf_priority){
-			new_leaf = (Leaf) {
+			new_leaf = (TreeNode) {
 			new_leaf_id, 
 			new_leaf_priority,
 			{left_leaf_id,right_leaf_id},
@@ -213,31 +251,39 @@ static uint8_t* huffmanEncode(const uint8_t* data,int byte_length,long* size){
 			};
 		}
 		else{
-			new_leaf = (Leaf) {
+			new_leaf = (TreeNode) {
 			new_leaf_id, 
 			new_leaf_priority,
 			{right_leaf_id,left_leaf_id},
 			{right_leaf_priority,left_leaf_priority}
 			};
 		}*/
-		Leaf new_leaf = assignNewLeaf(new_leaf_id,leaf1_id,leaf2_id,
+		TreeNode new_leaf = assignNewLeaf(new_leaf_id,leaf1_id,leaf2_id,
 									leaf1_priority,leaf2_priority);
 		combined_leaves[current_leaf_id-256] = new_leaf;
+		current_leaf_id++;
 		
-		printLeaf(new_leaf);
+		// printLeaf(new_leaf);
 		heapPush(min_heap,new_leaf.id,new_leaf.priority);
 		
 	}
 	double head_priority;
 	int head_id = heapExtractMin(min_heap,&head_priority);
 	uint16_t encoded_bits[256];
+	for (int i = 0; i < 256; i++)
+	{
+		encoded_bits[i] = 0;
+	}
+	printTree(combined_leaves,256,head_id,0);
+	assignEncodedBits(encoded_bits,combined_leaves,256,head_id,head_priority,1);
 	/*for(int index = 0; index < 256; index++){
 		if(number_of_hits[index] != 0){
-			encoded_bits[index] = findBitRun()
+			printf("%d, %d:",index,number_of_hits[index]);
+			printBinary(encoded_bits[index]);
+			printf("\n");
+			// printf("%d: %d\n",index,encoded_bits[index]);
 		} 
 	}*/
-	assignEncodedBits(encoded_bits,number_of_hits,combined_leaves,256,head_id,head_priority,1);
-
 	return NULL; // TODO: this should not be NULL
 }
 void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit file format
@@ -274,11 +320,18 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 		uint8_t *data;
 		long size;
 		size = 0;
-		data = huffmanEncode(omg->data,getOneImageByteLength(omg),&size);
+		const char *inputString = "A_DEAD_DAD_CEDED_A_BAD_BABE_A_BEADED_ABACA_BED";
+		uint8_t byteArray [strlen(inputString)];
+		for(int i = 0;i<strlen(inputString);i++){
+			byteArray[i] = (uint8_t) inputString[i];
+		}
+		// data = huffmanEncode(omg->data,getOneImageByteLength(omg),&size);
+		data = huffmanEncode(byteArray,strlen(inputString),&size);
 		for(int i = 0;i<size;i++){
 			printf("%d\n",data[i]);
 		}
-		exit(1);
+		printf("exited properly\n");
+		exit(0);
 	  }
 	  
       fclose(f);

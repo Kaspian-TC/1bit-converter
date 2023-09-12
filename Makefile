@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g 
-SRCS = main_code.c 1bit_funcs.c imgutils.c read_write/1bit_read_functions.c read_write/1bit_write_functions.c data_types/minheap.c data_types/1bit_types.c
+SRCS = main_code.c 1bit_funcs.c imgutils.c read_write/1bit_read_functions.c read_write/1bit_write_functions.c read_write/huffman.c data_types/minheap.c data_types/1bit_types.c
 OBJS = $(SRCS:.c=.o)
 
 # 1bit_converter.exe: main_code.c imgutils.o 1bit_funcs.o 1bit_read_functions.o 1bit_write_functions.o
@@ -13,8 +13,6 @@ OBJS = $(SRCS:.c=.o)
 	# $(CC) $(CFLAGS) -c 1bit_read_functions.c -o $@
 # 1bit_write_functions.o: 1bit_write_functions.c
 	# $(CC) $(CFLAGS) -c 1bit_write_functions.c -o $@
-# read_writes:
-	# $(MAKE) -C read_write
 # Define the source files and object files
 
 # Define the main target

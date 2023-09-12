@@ -295,7 +295,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 		}
 		free(data);
 	  }
-	  else if (strcmp(type,".2")==0)
+	  else if (strcmp(type,".2")==0) // huffman encoding
 	  {
 		uint8_t *data;
 		long size;

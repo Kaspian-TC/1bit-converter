@@ -179,53 +179,12 @@ uint8_t* huffmanEncode(const uint8_t* data, const int byte_length,long* size){
 	// Make heap_size = 256 because that is the max amount of possible values
 	const int heap_size = 256;
 	MinHeap * min_heap = createNewHuffmanHeap(heap_size,data,byte_length);
-	/*MinHeap * min_heap = newMinHeap(heap_size);
-	unsigned long number_of_hits[heap_size];
-	// Sets number of hits to zero
-	for (int i = 0; i < heap_size; i++) {
-		number_of_hits[i] = 0;
-	}
-	// Adds all occurences of values
-	for(long i = 0; i < length; i++){
-		number_of_hits[data[i]]++;
-	}
-	unsigned long total_zero_values = 0;
-	for (int i = 0; i < heap_size; i++) {
-		if(number_of_hits[i] > 0){
-			// printf("%d: %ld\n",i,number_of_hits[i]);
-			heapPush(min_heap,i,number_of_hits[i]);
-		}
-		else{
-			total_zero_values++;
-		}
-	}*/
-
 	if(min_heap == NULL){
 		fprintf(stderr,"All 256 bytes where detected."
 		" Huffman encoding is redundant");
 		return NULL;
 	}
 	TreeNode tree[heap_size];
-	/*int current_leaf_id = heap_size;
-	// TODO: While loop should be in a function
-	while(heapSize(min_heap) > 1){
-		double leaf1_priority, leaf2_priority;
-		int leaf1_id = heapExtractMin(min_heap,&leaf1_priority);
-		int leaf2_id = heapExtractMin(min_heap,&leaf2_priority);
-		printf("leaf1_id: %d leaf2_id: %d\n",leaf1_id,leaf2_id);
-		printf("leaf1_priority: %.1f leaf2_priority: %.1f\n",leaf1_priority,leaf2_priority);
-		assert(leaf1_id != -1 && leaf2_id != -1);
-
-		int new_leaf_id = current_leaf_id;
-		TreeNode new_leaf = assignNewLeaf(new_leaf_id,leaf1_id,leaf2_id,
-									leaf1_priority,leaf2_priority);
-		combined_leaves[current_leaf_id-256] = new_leaf;
-		current_leaf_id++;
-		
-		heapPush(min_heap,new_leaf.id,new_leaf.priority);
-	}
-	double head_priority;
-	int head_id = heapExtractMin(min_heap,&head_priority);*/
 	double head_priority;
 	int head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
 	Bitrun* encoded_bits[256];

@@ -20,7 +20,7 @@ Bitrun * shiftBitLeft(Bitrun * bitrun){
     
     bitrun->run[0] = bitrun->run[0] << 1;
     for(int i = 1;i<bitrun->length;i++){
-        bitrun->run[i-1] = bitrun->run[i-1] | (bitrun->run[i] & last_bit);
+        bitrun->run[i-1] = bitrun->run[i-1] | (bitrun->run[i] >> sizeof(BITRUN_TYPE)*8-1);
         bitrun->run[i] = bitrun->run[i] << 1;
     }
 }

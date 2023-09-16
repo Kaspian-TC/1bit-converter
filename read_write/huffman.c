@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "../data_types/minheap.h"
 #include "huffman.h"
+#include "../data_types/bitrun.h"
 typedef struct leaf
 {
 	int id;
@@ -10,6 +11,7 @@ typedef struct leaf
 	int left_id,right_id;
 	float left_priority,right_priority;
 }TreeNode;
+
 static void printBinary(uint16_t number){
 	for(int i = 15;i>=0;i--){
 		printf("%d",number>>i & 1);
@@ -66,11 +68,11 @@ static void assignEncodedBits(uint16_t * encoded_bits,
 		return;
 	}
 	// Find the left and right then recurse, make sure to bit shift and add 1 
-	// if right, 0 if left
+	// if right, 0 if left 1
 
 	TreeNode head = combined_leaves[head_id-size];
 	//  Call left child
-	uint16_t left_run = current_run << 1 | 0; //bit shift left and add 0
+	uint16_t left_run = current_run << 1; //bit shift left
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.left_id,
 	head.left_priority,left_run);
 	// Call right child
@@ -226,14 +228,13 @@ uint8_t* huffmanEncode(const uint8_t* data, const int byte_length,long* size){
 	int head_id = heapExtractMin(min_heap,&head_priority);*/
 	double head_priority;
 	int head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
-	uint16_t encoded_bits[256];
+	Bitrun* encoded_bits[256];
 	for (int i = 0; i < 256; i++)
 	{
-		encoded_bits[i] = 0;
+		encoded_bits[i] = createBitRun(NULL);
 	}
 	printTree(tree,256,head_id,0);
 	assignEncodedBits(encoded_bits,tree,256,head_id,head_priority,1);
-	
 	freeHeap(min_heap);
 	return NULL; // TODO: this should not be NULL
 }

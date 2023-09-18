@@ -7,7 +7,8 @@ typedef struct bitRun{
 	BITRUN_TYPE * run;
 	int length;
 } Bitrun;
-Bitrun * shiftAndAdd(Bitrun * bitrun,bool bit);
-Bitrun * createBitRun(Bitrun * run);
+void freeBitrun(Bitrun * bitrun);
+Bitrun * shiftAndAdd(Bitrun * bitrun, bool bit);
+Bitrun * createBitRun(void);
 
 #endif // _BITRUN_

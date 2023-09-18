@@ -55,7 +55,7 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
  * @param head_priority 
  * @param current_run 
  */
-static void assignEncodedBits(uint16_t * encoded_bits,
+static void assignEncodedBits(Bitrun * encoded_bits[],
 			TreeNode* combined_leaves, int size,int head_id,float head_priority,
 			uint16_t current_run){
 	// printf("start: head_id: %d head_priority: %f \n",head_id,head_priority);
@@ -187,13 +187,15 @@ uint8_t* huffmanEncode(const uint8_t* data, const int byte_length,long* size){
 	TreeNode tree[heap_size];
 	double head_priority;
 	int head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
-	Bitrun* encoded_bits[256];
-	for (int i = 0; i < 256; i++)
+	Bitrun * encoded_bits[heap_size];
+	for (int i = 0; i < heap_size; i++)
 	{
-		encoded_bits[i] = createBitRun(NULL);
+		encoded_bits[i] = createBitRun();
 	}
-	printTree(tree,256,head_id,0);
-	assignEncodedBits(encoded_bits,tree,256,head_id,head_priority,1);
+	// printTree(tree,heap_size,head_id,0);
+	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,1);
+	
 	freeHeap(min_heap);
+
 	return NULL; // TODO: this should not be NULL
 }

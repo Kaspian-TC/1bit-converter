@@ -56,15 +56,11 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
  * @param current_run 
  */
 static void assignEncodedBits(Bitrun * encoded_bits[],
-			TreeNode* combined_leaves, int size,int head_id,float head_priority,
-			uint16_t current_run){
-	// printf("start: head_id: %d head_priority: %f \n",head_id,head_priority);
+			const TreeNode* combined_leaves, const int size, const int head_id,
+			const float head_priority, const Bitrun * current_run){
 	if(head_id < size){ //one of the leaf nodes
-		assert(current_run != 1);
-		encoded_bits[head_id] = current_run;
-		// printf("head_id: %c current_run:",head_id);
-		// printBinary(current_run);
-		// printf("\n");
+		assert(encoded_bits[head_id] == NULL);
+		encoded_bits[head_id] = createAndCopyBitrun(current_run);
 		return;
 	}
 	// Find the left and right then recurse, make sure to bit shift and add 1 
@@ -72,14 +68,18 @@ static void assignEncodedBits(Bitrun * encoded_bits[],
 
 	TreeNode head = combined_leaves[head_id-size];
 	//  Call left child
-	uint16_t left_run = current_run << 1; //bit shift left
+	Bitrun * left_run = shiftAndAdd(createAndCopyBitrun(current_run),false); //bit shift left
+
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.left_id,
 	head.left_priority,left_run);
+	freeBitrun(left_run);
+
 	// Call right child
-	uint16_t right_run = current_run << 1 | 1; //bit shift left and add 1
+	Bitrun * right_run = shiftAndAdd(createAndCopyBitrun(current_run),true); //bit shift left and add 1
+	// Bitrun * right_run = shiftAndAdd(current_run,true); 
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.right_id,
 	head.right_priority,right_run);
-	
+	freeBitrun(right_run);
 	return;
 }
 
@@ -190,12 +190,16 @@ uint8_t* huffmanEncode(const uint8_t* data, const int byte_length,long* size){
 	Bitrun * encoded_bits[heap_size];
 	for (int i = 0; i < heap_size; i++)
 	{
-		encoded_bits[i] = createBitRun();
+		encoded_bits[i] = NULL;
 	}
 	// printTree(tree,heap_size,head_id,0);
-	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,1);
-	
+	// If uint256_t existed in c99, then this would be much better
+	// Until I can figure that out, I will work with my current solution
+	Bitrun * starting_run = createBitRun();
+	starting_run = shiftAndAdd(starting_run,true);
+	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,starting_run);
+	freeBitrun(starting_run);
 	freeHeap(min_heap);
-
+	
 	return NULL; // TODO: this should not be NULL
 }

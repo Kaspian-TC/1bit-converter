@@ -2,7 +2,6 @@ CC = gcc
 CFLAGS = -Wall -g 
 EXE_NAME = 1bit_converter.exe
 SRC_DIR = .
-# SRCS = main_code.c 1bit_funcs.c imgutils.c read_write/1bit_read_functions.c read_write/1bit_write_functions.c read_write/huffman.c data_types/minheap.c data_types/1bit_types.c
 SRCS := $(wildcard *.c) $(wildcard */*.c)
 OBJS = $(SRCS:.c=.o)
 ifeq ($(OS),Windows_NT)
@@ -10,26 +9,22 @@ ifeq ($(OS),Windows_NT)
 else
 	PLATFORM_OS=UNIX
 endif
-# Define the main target
+
+# main target
 $(EXE_NAME): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-# Define the pattern rule for compiling .c files into .o files
+# pattern rule for compiling .c files into .o files
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Define a variable for the subdirectory
-SUBDIR = read_write
-
-# Define dependencies for the files in the subdirectory
-$(SUBDIR)/%.o: $(SUBDIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
 
 INPUT_PPM = david
 1BIT_FILE = anime_image
 PNG_NAME = Spirited_Sea.png
 1BIT_VER = .2
 
+# phony targets to help with testing
 create: $(EXE_NAME)
 	$^ -i "ppm images"/$(INPUT_PPM).ppm "1bit images"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) 
 read: $(EXE_NAME)
@@ -44,6 +39,7 @@ gdb: $(EXE_NAME)
 gdb-create:
 	gdb $(EXE_NAME) -ex "run -i \"ppm images\"/$(INPUT_PPM).ppm \"1bit images\"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER)"
 
+# phony target to clean up the directory
 clean:
 ifeq ($(PLATFORM_OS),WINDOWS)
 	del /Q /S $(EXE_NAME) *.o

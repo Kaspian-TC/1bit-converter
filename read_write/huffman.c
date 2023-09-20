@@ -11,7 +11,7 @@ typedef struct leaf
 	int left_id,right_id;
 	float left_priority,right_priority;
 }TreeNode;
-
+#ifdef DEBUG
 static void printBinary(uint16_t number){
 	for(int i = 15;i>=0;i--){
 		printf("%d",number>>i & 1);
@@ -42,7 +42,7 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
 	printTree(combined_leaves,size,head.right_id,depth+1);
 	return;
 }
-
+#endif // DEBUG
 /**
  * @brief assignEncodedBits holds a run (current_run) that represents the 
  * current run STARTING AFTER the first 1. ie 00101001 represents 01001. 8 bit 
@@ -57,28 +57,28 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
  */
 static void assignEncodedBits(Bitrun * encoded_bits[],
 			const TreeNode* combined_leaves, const int size, const int head_id,
-			const float head_priority, const Bitrun * current_run){
+			const float head_priority, const Bitrun * current_run,int depth){
 	if(head_id < size){ //one of the leaf nodes
 		assert(encoded_bits[head_id] == NULL);
 		encoded_bits[head_id] = createAndCopyBitrun(current_run);
+
 		return;
 	}
 	// Find the left and right then recurse, make sure to bit shift and add 1 
 	// if right, 0 if left 1
-
 	TreeNode head = combined_leaves[head_id-size];
 	//  Call left child
 	Bitrun * left_run = shiftAndAdd(createAndCopyBitrun(current_run),false); //bit shift left
 
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.left_id,
-	head.left_priority,left_run);
+	head.left_priority,left_run,depth+1);
 	freeBitrun(left_run);
 
 	// Call right child
 	Bitrun * right_run = shiftAndAdd(createAndCopyBitrun(current_run),true); //bit shift left and add 1
 	// Bitrun * right_run = shiftAndAdd(current_run,true); 
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.right_id,
-	head.right_priority,right_run);
+	head.right_priority,right_run,depth+1);
 	freeBitrun(right_run);
 	return;
 }
@@ -153,7 +153,8 @@ static MinHeap * createNewHuffmanHeap(const int heap_size,const uint8_t* data,
 	}
 	return min_heap;
 }
-static int assignTreeNodes(TreeNode * tree,MinHeap * min_heap, const int heap_size,double * head_priority){
+static int assignTreeNodes(TreeNode * tree,MinHeap * min_heap,
+						   const int heap_size,double * head_priority){
 	int current_leaf_id = heap_size;
 	// TODO: While loop should be in a function
 	while(heapSize(min_heap) > 1){
@@ -175,10 +176,27 @@ static int assignTreeNodes(TreeNode * tree,MinHeap * min_heap, const int heap_si
 	int head_id = heapExtractMin(min_heap,head_priority);
 	return head_id;
 }
-uint8_t* huffmanEncode(const uint8_t* data, const int byte_length,long* size){
+uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
+					  const uint8_t* input_data,const int input_data_length,
+					  long* size){
+	uint8_t * output_data = malloc(sizeof(uint8_t)*input_data_length);
+	long output_data_index = 0;
+	for(int i = 0;i<input_data_length;i++){
+		char current_char = input_data[i];
+		const Bitrun * current_run = encoded_bits[(int)current_char];
+		output_data_index = assignBitrunToMemory(current_run,output_data,output_data_index);
+		if(output_data_index == -1){
+			fprintf(stderr,"Error in compressData: output_data_index == -1\n");
+			return NULL;
+		}
+	}
+	*size = output_data_index;
+	return output_data;
+}
+uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	// Make heap_size = 256 because that is the max amount of possible values
 	const int heap_size = 256;
-	MinHeap * min_heap = createNewHuffmanHeap(heap_size,data,byte_length);
+	MinHeap * min_heap = createNewHuffmanHeap(heap_size,data,data_length);
 	if(min_heap == NULL){
 		fprintf(stderr,"All 256 bytes where detected."
 		" Huffman encoding is redundant");
@@ -187,19 +205,20 @@ uint8_t* huffmanEncode(const uint8_t* data, const int byte_length,long* size){
 	TreeNode tree[heap_size];
 	double head_priority;
 	int head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
+	// If uint256_t existed in c99, then this would be much better
+	// Until I can figure that out, I will work with my current solution
+	
 	Bitrun * encoded_bits[heap_size];
 	for (int i = 0; i < heap_size; i++)
 	{
 		encoded_bits[i] = NULL;
 	}
 	// printTree(tree,heap_size,head_id,0);
-	// If uint256_t existed in c99, then this would be much better
-	// Until I can figure that out, I will work with my current solution
 	Bitrun * starting_run = createBitRun();
 	starting_run = shiftAndAdd(starting_run,true);
-	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,starting_run);
+	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,starting_run,0);
 	freeBitrun(starting_run);
 	freeHeap(min_heap);
-	
-	return NULL; // TODO: this should not be NULL
+
+	return compressData(encoded_bits,heap_size,data,data_length,size);
 }

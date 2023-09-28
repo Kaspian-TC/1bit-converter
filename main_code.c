@@ -104,7 +104,7 @@ int main(int argc, char** argv){
 		else{
 			averageColourImage(img);
 		}
-		omg = convertImgToOne(img); //always finds the average and threshhold dithers
+		omg = convertImgToOne(img); //threshhold dithers without avg
 		
 		if(file_version != NULL){
 			oneBitWrite(omg, output_file,file_version);

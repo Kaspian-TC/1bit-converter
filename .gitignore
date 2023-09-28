@@ -2,4 +2,6 @@ PNG images
 ppm images
 1bit images
 ffmpeg.exe
+*.o
+*.exe
 .vscode/

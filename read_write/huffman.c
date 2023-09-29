@@ -61,7 +61,6 @@ static void assignEncodedBits(Bitrun * encoded_bits[],
 	if(head_id < size){ //one of the leaf nodes
 		assert(encoded_bits[head_id] == NULL);
 		encoded_bits[head_id] = createAndCopyBitrun(current_run);
-
 		return;
 	}
 	// Find the left and right then recurse, make sure to bit shift and add 1 
@@ -69,14 +68,12 @@ static void assignEncodedBits(Bitrun * encoded_bits[],
 	TreeNode head = combined_leaves[head_id-size];
 	//  Call left child
 	Bitrun * left_run = shiftAndAdd(createAndCopyBitrun(current_run),false); //bit shift left
-
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.left_id,
 	head.left_priority,left_run,depth+1);
 	freeBitrun(left_run);
 
 	// Call right child
 	Bitrun * right_run = shiftAndAdd(createAndCopyBitrun(current_run),true); //bit shift left and add 1
-	// Bitrun * right_run = shiftAndAdd(current_run,true); 
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.right_id,
 	head.right_priority,right_run,depth+1);
 	freeBitrun(right_run);
@@ -161,8 +158,8 @@ static int assignTreeNodes(TreeNode * tree,MinHeap * min_heap,
 		double leaf1_priority, leaf2_priority;
 		int leaf1_id = heapExtractMin(min_heap,&leaf1_priority);
 		int leaf2_id = heapExtractMin(min_heap,&leaf2_priority);
-		printf("leaf1_id: %d leaf2_id: %d\n",leaf1_id,leaf2_id);
-		printf("leaf1_priority: %.1f leaf2_priority: %.1f\n",leaf1_priority,leaf2_priority);
+		// printf("leaf1_id: %d leaf2_id: %d\n",leaf1_id,leaf2_id);
+		// printf("leaf1_priority: %.1f leaf2_priority: %.1f\n",leaf1_priority,leaf2_priority);
 		assert(leaf1_id != -1 && leaf2_id != -1);
 
 		int new_leaf_id = current_leaf_id;
@@ -196,7 +193,8 @@ uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
 uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	// Make heap_size = 256 because that is the max amount of possible values
 	const int heap_size = 256;
-	MinHeap * min_heap = createNewHuffmanHeap(heap_size,data,data_length);
+	// needs to be 2*heap_size because of the extra nodes that are created
+	MinHeap * min_heap = createNewHuffmanHeap(heap_size*2,data,data_length);
 	if(min_heap == NULL){
 		fprintf(stderr,"All 256 bytes where detected."
 		" Huffman encoding is redundant");
@@ -219,6 +217,18 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,starting_run,0);
 	freeBitrun(starting_run);
 	freeHeap(min_heap);
-
-	return compressData(encoded_bits,heap_size,data,data_length,size);
+	for(int i = 0;i<heap_size;i++){
+		if(encoded_bits[i] != NULL){
+			printf("%c: ",i);
+			printBitrun(encoded_bits[i]);
+		}
+	}
+	uint8_t* output_data = compressData(encoded_bits
+	,heap_size,data,data_length,size);
+	for(int i = 0;i<heap_size;i++){
+		if(encoded_bits[i] != NULL){
+			freeBitrun(encoded_bits[i]);
+		}
+	}
+	return output_data;
 }

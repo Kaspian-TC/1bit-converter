@@ -241,33 +241,6 @@ void averageColourImage(Image* img){
 	}
 	return;
 }
-/* OneImage* convertAvgImgToOne(Image *img){//converts type Image to OneImage
-	if (img != NULL) {
-		OneImage *omg = (OneImage *)calloc(1, sizeof(OneImage));
-		int nameLen = strlen(img->filename);
-		omg->filename = malloc(nameLen+2);
-		strcpy(omg->filename,img->filename);
-		omg->filename[nameLen-3] = '1';
-		omg->filename[nameLen-2] = 'b';
-		omg->filename[nameLen-1] = 'i';
-		omg->filename[nameLen] = 't';
-		omg->filename[nameLen+1] = '\0';
-		omg->data = calloc((size_t)ceil((float)(img->sx * img->sy)/8), sizeof(uint8_t));
-		omg->sx = img->sx;
-		omg->sy = img->sy;
-		long imgSize = img->sx * img->sy;
-		int avgLimit = calcAvgGrey(img);
-		for(long i = 0; i<imgSize;i++){
-			// 1 is white, 0 is black
-			if(avgRGB(getPixel(img,i)) >= avgLimit && avgLimit != 255){
-				assignBit(omg,i,1);
-			}
-		}
-		return omg;
-	}
-	fprintf(stderr, "Unable to allocate memory for Oneimage structure\n");
-	return (NULL);
-} */
 Image* convertOneToImg(OneImage* omg){
 	if(omg != NULL) {
 		Image *img = (Image *)calloc(1, sizeof(Image));

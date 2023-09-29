@@ -15,7 +15,7 @@
  */
 
 #include "minheap.h"
-
+#include <assert.h>
 /**
  * Allocate a new min heap of the given size.
  * 
@@ -64,11 +64,13 @@ static void swap(MinHeap *heap, int a, int b) {
  * You may assume the value does not already exist in the heap, and there is
  * enough space in the heap for it.
  */
-void heapPush(MinHeap *heap, int val, double priority) {
+void heapPush(MinHeap *heap, const int val, const double priority) {
 	//insert new val into the last location in the heap (numItems)
+	assert(val < heap->maxSize);
 	heap->arr[heap->numItems].val = val;
 	heap->arr[heap->numItems].priority = priority;
 	// Refresh indices
+	assert(heap->indices[val] == -1);
 	heap->indices[val] = heap->numItems;
 	int current_index = heap->numItems;
 	while(current_index!=0)

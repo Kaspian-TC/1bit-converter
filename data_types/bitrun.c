@@ -3,7 +3,8 @@
 #include <stdint.h> 
 #include <stdbool.h>
 #include <stdlib.h>
-#define BITRUN_TYPE uint64_t
+#include <stdio.h>
+#define BITRUN_TYPE uint8_t
 
 static const int run_type_size = sizeof(BITRUN_TYPE)*8;
 typedef struct bitRun{
@@ -44,8 +45,8 @@ static uint8_t changeBit(uint8_t byte,int index,bool val){//returns the changed 
 	return byte;
 }
 static void assignBit(uint8_t* dest, long index,bool val){//bit should only be 1 or 0
-    uint8_t current_byte = dest[(index)/sizeof(uint8_t)];
-    dest[(index)/sizeof(uint8_t)] = changeBit(current_byte,(index)%sizeof(uint8_t),val);
+    uint8_t current_byte = dest[(index)/(sizeof(uint8_t)*8)];
+    dest[(index)/(sizeof(uint8_t)*8)] = changeBit(current_byte,(index)%(sizeof(uint8_t)*8),val);
     return;
 }
 /**
@@ -65,6 +66,9 @@ static uint8_t readBitrunBit(const Bitrun * bitrun,const int index){
     return readBit(bitrun->run[index/run_type_size],index%run_type_size);
 }
 static Bitrun * extendBitRun(Bitrun * bitrun,int extend_by){
+    if(extend_by <= 0){
+        return bitrun;
+    }
     bitrun->length+=extend_by;
     bitrun->run = realloc(bitrun->run,sizeof(BITRUN_TYPE)*bitrun->length);
     for(int i = bitrun->length-1;i>0;i--){
@@ -95,7 +99,16 @@ static Bitrun * shiftBitLeft(Bitrun * bitrun){
 
     return bitrun;
 }
-
+void printBitrun(const Bitrun * bitrun){
+    if(bitrun == NULL){
+        return;
+    }
+    for(int i = 0;i<bitrun->length*run_type_size;i++){
+        printf("%d",readBitrunBit(bitrun,i));
+    }
+    printf("\n");
+    return;
+}
 Bitrun * shiftAndAdd(Bitrun * bitrun,bool bit){
     if(bitrun == NULL){
         return NULL;
@@ -120,18 +133,23 @@ long assignBitrunToMemory(const Bitrun * bitrun,uint8_t * dest,long dest_start){
     if(bitrun == NULL){
         return -1;
     }
+    //find starting index
     long starting_index = 0;
     while(readBitrunBit(bitrun,starting_index) == 0 && 
                         starting_index < bitrun->length*run_type_size){
         starting_index++;
     }
     starting_index++; // so it starts after the first 1
-    const int bitrun_bit_length = bitrun->length*run_type_size-starting_index+1;
+    //length of the bitrun in bits
+    const int bitrun_bit_length = bitrun->length*run_type_size-starting_index;
 
+    //assign the bitrun to dest
     for(long i = dest_start;i<dest_start+(bitrun_bit_length);i++){
         const int bitrun_index = i-dest_start+starting_index;
+        printf("%d",readBitrunBit(bitrun,bitrun_index));
         assignBit(dest,i,readBitrunBit(bitrun,bitrun_index));
     }
+    printf("\n"); // TODO: figure out why this is not encoding properly
 
     return dest_start+bitrun_bit_length;
 }
@@ -143,7 +161,7 @@ void freeBitrun(Bitrun * bitrun){
 }
 Bitrun * createAndCopyBitrun(const Bitrun * bitrun){
     Bitrun * new_bitrun = createBitRun();
-    new_bitrun->length = bitrun->length;
+    // new_bitrun->length = bitrun->length;
     new_bitrun = extendBitRun(new_bitrun,bitrun->length-1);
     for(int i = 0;i<bitrun->length;i++){
         new_bitrun->run[i] = bitrun->run[i];
@@ -153,6 +171,6 @@ Bitrun * createAndCopyBitrun(const Bitrun * bitrun){
 Bitrun * createBitRun(void){
     Bitrun * new_run = malloc(sizeof(Bitrun));
     new_run->length = 1;
-    new_run->run = malloc(sizeof(BITRUN_TYPE));
+    new_run->run = calloc(sizeof(BITRUN_TYPE),1);
     return new_run;
 }

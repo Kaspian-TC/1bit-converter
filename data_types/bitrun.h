@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 typedef struct bitRun Bitrun;
+void printBitrun(const Bitrun * bitrun);
 Bitrun * shiftAndAdd(Bitrun * bitrun, bool bit);
 long assignBitrunToMemory(const Bitrun * bitrun,uint8_t * dest,long dest_start);
 void freeBitrun(Bitrun * bitrun);

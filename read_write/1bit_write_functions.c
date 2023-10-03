@@ -12,7 +12,12 @@ static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	}
 	return;
 }
-
+static void printBinary(uint16_t number){
+	for(int i = 15;i>=0;i--){
+		printf("%d",number>>i & 1);
+	}
+	return;
+}
 static uint8_t* runLengthEncode(const uint8_t* data,int x_size,int y_size,long* size){ //encodes the data with run length encoding
 	//if there is negative compression, makes new_data identical to data
 	/*aaaabbbbcdddddee will become aa4bb4cdd5ee2 unless there is negative compression in which case it will exit with NULL*/
@@ -123,15 +128,14 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 		for(int i = 0;i<strlen(inputString);i++){
 			byteArray[i] = (uint8_t) inputString[i];
 		}
-		// data = huffmanEncode(omg->data,getOneImageByteLength(omg),&size);
 		data = huffmanEncode(byteArray,strlen(inputString),&size);
-		for(int i = 0;i<size;i++){
-			printf("%d\n",data[i]);
+		for(int i = 0;i<size/8;i++){
+			printBinary(data[i]);
+			// printf("%d ",data[i]);
 		}
-		printf("exited properly\n");
-		exit(0);
+		free(data);
 	  }
-	  
+	  printf("before fclose\n");
       fclose(f);
       return;
     }

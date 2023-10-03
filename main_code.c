@@ -30,7 +30,7 @@ int main(int argc, char** argv){
 	-d : precides dithering type
 	-co : colour flag for create, must be followed by two hexidecimals in form #XXXXXX
 	*/
-
+	printf("runs\n");
 
 	char is_read = 0;
 	char is_create = 0;
@@ -108,6 +108,7 @@ int main(int argc, char** argv){
 		
 		if(file_version != NULL){
 			oneBitWrite(omg, output_file,file_version);
+			printf("exited properly\n");
 		}
 		else{
 			oneBitOutput(omg, output_file);

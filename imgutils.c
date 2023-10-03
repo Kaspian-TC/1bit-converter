@@ -142,5 +142,6 @@ void outputPath(int path[], Image *img) {
 
 void freeImage(Image *im) {
   if (im) free(im->data);
+  if (im->filename != NULL) free(im->filename);
   free(im);
 }

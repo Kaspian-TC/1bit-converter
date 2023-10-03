@@ -40,6 +40,8 @@ gdb: $(EXE_NAME)
 	gdb $(EXE_NAME)
 gdb-create:
 	gdb $(EXE_NAME) -ex "run -i \"ppm images\"/$(INPUT_PPM).ppm \"1bit images\"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER)"
+gdb-read:
+	gdb $(EXE_NAME) -ex "run -i \"1bit images\"/$(PNG_NAME).1bit \"PNG images\"/1bit_$(PNG_NAME).png -r"
 
 # phony target to clean up the directory
 clean:

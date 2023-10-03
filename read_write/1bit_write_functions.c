@@ -5,49 +5,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h" //this should only be included here since this is the WRITE file
 #endif
-/** 
- * 0 is the left leaf while 1 is the right leaf
-*/
-/*
-typedef struct leaf
-{
-	int id;
-	float priority;
-	int left_id,right_id;
-	float left_priority,right_priority;
-}TreeNode;
-void printBinary(uint16_t number){
-	for(int i = 15;i>=0;i--){
-		printf("%d",number>>i & 1);
-	}
-	return;
-}
 
-void printLeaf(TreeNode leaf){
-	printf("id: %d\n",leaf.id);
-	printf("priority: %f\n",leaf.priority);
-	printf("children: left: %d right: %d\n",leaf.left_id,leaf.right_id);
-	printf("child_priorities: left: %f right:%f\n",leaf.left_priority,
-	leaf.right_priority);
-
-	return;
-}
-void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
-	if(head_id < size){ //one of the leaf nodes
-		// printf("\n");
-		printf("leaf: %c\n",head_id);
-		return;
-	}
-	TreeNode head = combined_leaves[head_id-size];
-	printf("%03d ",head_id);
-	printTree(combined_leaves,size,head.left_id,depth+1);
-	
-	for(int i = 0;i<depth;i++){
-		printf("    ");
-	}
-	printTree(combined_leaves,size,head.right_id,depth+1);
-	return;
-}*/
 static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	for(int i = 0;i<length;i++){
 		dest[i] = src[i];

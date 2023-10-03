@@ -13,7 +13,7 @@ char * toUpper(char * s){ //changes the string to be uppercase only
 	}
 	return s;
 }
-unsigned char fileIsValid(char *filename){// return 1 if valid, 0 otherwise
+unsigned char fileIsReadable(char *filename){// return 1 if valid, 0 otherwise
 	FILE *f = fopen(filename, "r");
 	if (f == NULL) {
 		fprintf(stderr,"Unable to open file %s. Check the path.\n",filename);
@@ -32,10 +32,10 @@ int main(int argc, char** argv){
 	*/
 	printf("runs\n");
 
-	char is_read = 0;
-	char is_create = 0;
-	char is_upgrade = 0;
-	char is_dithered = 0;
+	bool is_read = 0;
+	bool is_create = 0;
+	bool is_upgrade = 0;
+	bool is_dithered = 0;
 	
 	char * dither_type;
 	char * input_file;
@@ -67,7 +67,7 @@ int main(int argc, char** argv){
 		fprintf(stderr,"must include -r,-c, or -u (but only one)\n");
 		return 1;
 	}
-	if(!(fileIsValid(input_file))){
+	if(!(fileIsReadable(input_file))){
 		fprintf(stderr,"input file path invalid or doesn't exist\n");
 		return 1;
 	}

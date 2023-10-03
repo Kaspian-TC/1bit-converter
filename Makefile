@@ -24,24 +24,24 @@ $(EXE_NAME): $(OBJS)
 INPUT_PPM = david
 1BIT_FILE = anime_image
 PNG_NAME = david.png
-1BIT_VER = .2
+1BIT_VER = .0
 
 # phony targets to help with testing
 create: $(EXE_NAME)
-	$(EXE_NAME) -i "ppm images"/$(INPUT_PPM).ppm "1bit images"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) 
+	$(EXE_NAME) -i ppm_images/$(INPUT_PPM).ppm 1bit_images/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) 
 read: $(EXE_NAME)
-	$(EXE_NAME) -i "1bit images"/$(1BIT_FILE).1bit "ppm images"/$(1BIT_FILE)_test.ppm -r
+	$(EXE_NAME) -i 1bit_images/$(1BIT_FILE).1bit ppm_images/$(1BIT_FILE)_test.ppm -r
 upgrade: $(EXE_NAME)
-	$(EXE_NAME) -i "1bit images"/$(1BIT_FILE).1bit $(1BIT_FILE)_2.1bit -u $(1BIT_VER)
+	$(EXE_NAME) -i 1bit_images/$(1BIT_FILE).1bit $(1BIT_FILE)_2.1bit -u $(1BIT_VER)
 png: $(EXE_NAME)
-	$(EXE_NAME) -i "png images"/$(PNG_NAME) "1bit images"/$(PNG_NAME).1bit -c $(1BIT_VER) -d bayer-2
-	$(EXE_NAME) -i "1bit images"/$(PNG_NAME).1bit "PNG images"/1bit_$(PNG_NAME).png -r
+	$(EXE_NAME) -i png_images/$(PNG_NAME) 1bit_images/$(PNG_NAME).1bit -c $(1BIT_VER) -d bayer-2
+	$(EXE_NAME) -i 1bit_images/$(PNG_NAME).1bit png_images/1bit_$(PNG_NAME).png -r
 gdb: $(EXE_NAME)
 	gdb $(EXE_NAME)
 gdb-create:
-	gdb $(EXE_NAME) -ex "run -i \"ppm images\"/$(INPUT_PPM).ppm \"1bit images\"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER)"
+	gdb $(EXE_NAME) -ex run -i ppm_images/$(INPUT_PPM).ppm 1bit_images/$(INPUT_PPM)_2.1bit -c $(1BIT_VER)
 gdb-read:
-	gdb $(EXE_NAME) -ex "run -i \"1bit images\"/$(PNG_NAME).1bit \"PNG images\"/1bit_$(PNG_NAME).png -r"
+	gdb $(EXE_NAME) -ex run -i 1bit_images/$(PNG_NAME).1bit png_images/1bit_$(PNG_NAME).png -r
 
 # phony target to clean up the directory
 clean:

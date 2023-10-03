@@ -1,6 +1,6 @@
-PNG images
-ppm images
-1bit images
+png_images
+PPM_images
+1bit_images
 ffmpeg.exe
 *.o
 *.exe

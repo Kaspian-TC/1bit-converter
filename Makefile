@@ -22,15 +22,15 @@ $(EXE_NAME): $(OBJS)
 
 
 INPUT_PPM = david
-1BIT_FILE = anime_image
+1BIT_FILE = david
 PNG_NAME = david.png
 1BIT_VER = .0
 
 # phony targets to help with testing
 create: $(EXE_NAME)
-	$(EXE_NAME) -i ppm_images/$(INPUT_PPM).ppm 1bit_images/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) 
+	$(EXE_NAME) -i PPM_images/$(INPUT_PPM).ppm 1bit_images/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) 
 read: $(EXE_NAME)
-	$(EXE_NAME) -i 1bit_images/$(1BIT_FILE).1bit ppm_images/$(1BIT_FILE)_test.ppm -r
+	$(EXE_NAME) -i 1bit_images/$(1BIT_FILE).1bit PPM_images/$(1BIT_FILE)_test.ppm -r
 upgrade: $(EXE_NAME)
 	$(EXE_NAME) -i 1bit_images/$(1BIT_FILE).1bit $(1BIT_FILE)_2.1bit -u $(1BIT_VER)
 png: $(EXE_NAME)

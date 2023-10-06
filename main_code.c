@@ -28,7 +28,8 @@ int main(int argc, char** argv){
 	-u : upgrade flag
 	-i : precides the two file paths
 	-d : precides dithering type
-	-co : colour flag for create, must be followed by two hexidecimals in form #XXXXXX
+	-co : colour flag for create, followed by two hexidecimals in form #XXXXXX
+	(unimplemented)
 	*/
 	printf("runs\n");
 
@@ -108,7 +109,6 @@ int main(int argc, char** argv){
 		
 		if(file_version != NULL){
 			oneBitWrite(omg, output_file,file_version);
-			printf("exited properly\n");
 		}
 		else{
 			oneBitOutput(omg, output_file);

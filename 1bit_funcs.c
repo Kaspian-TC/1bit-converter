@@ -195,7 +195,7 @@ static uint8_t calcAvgGrey(Image *img){
 	for(long i = 0; i<imgSize -1;i++){
 		average += pixelSum(getPixel(img,i));
 	}
-	return (uint8_t)round(average/(imgSize*3));
+	return (uint8_t)round((1.0*average)/(imgSize*3));
 }
 /* Converts type Image to OneImage, but assumes the data has been converted already */
 OneImage* convertImgToOne(Image *img){

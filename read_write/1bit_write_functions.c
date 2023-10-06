@@ -135,7 +135,6 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 		}
 		free(data);
 	  }
-	  printf("before fclose\n");
       fclose(f);
       return;
     }

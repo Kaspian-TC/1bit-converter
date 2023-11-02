@@ -43,6 +43,12 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
 	return;
 }
 #endif // DEBUG
+static void printBinary(uint8_t number){
+	for(int i = 7;i>=0;i--){
+		printf("%d",number>>i & 1);
+	}
+	return;
+}
 /**
  * @brief assignEncodedBits holds a run (current_run) that represents the 
  * current run STARTING AFTER the first 1. ie 00101001 represents 01001. 8 bit 
@@ -180,7 +186,7 @@ uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
 	long output_data_index = 0;
 	for(int i = 0;i<input_data_length;i++){
 		char current_char = input_data[i];
-		const Bitrun * current_run = encoded_bits[(int)current_char];
+		const Bitrun * current_run = encoded_bits[(uint8_t)current_char];
 		output_data_index = assignBitrunToMemory(current_run,output_data,output_data_index);
 		if(output_data_index == -1){
 			fprintf(stderr,"Error in compressData: output_data_index == -1\n");

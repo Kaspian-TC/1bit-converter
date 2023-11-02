@@ -142,14 +142,11 @@ long assignBitrunToMemory(const Bitrun * bitrun,uint8_t * dest,long dest_start){
     starting_index++; // so it starts after the first 1
     //length of the bitrun in bits
     const int bitrun_bit_length = bitrun->length*run_type_size-starting_index;
-
     //assign the bitrun to dest
     for(long i = dest_start;i<dest_start+(bitrun_bit_length);i++){
         const int bitrun_index = i-dest_start+starting_index;
-        printf("%d",readBitrunBit(bitrun,bitrun_index));
         assignBit(dest,i,readBitrunBit(bitrun,bitrun_index));
     }
-    printf("\n"); // TODO: figure out why this is not encoding properly
 
     return dest_start+bitrun_bit_length;
 }

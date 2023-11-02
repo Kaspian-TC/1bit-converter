@@ -12,8 +12,8 @@ static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	}
 	return;
 }
-static void printBinary(uint16_t number){
-	for(int i = 15;i>=0;i--){
+static void printBinary(uint8_t number){
+	for(int i = 7;i>=0;i--){
 		printf("%d",number>>i & 1);
 	}
 	return;
@@ -128,8 +128,8 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 		for(int i = 0;i<strlen(inputString);i++){
 			byteArray[i] = (uint8_t) inputString[i];
 		}
-		data = huffmanEncode(byteArray,strlen(inputString),&size);
-		for(int i = 0;i<size/8;i++){
+		data = huffmanEncode(omg->data,ceil((float)(omg->sx* omg->sy)/8),&size);
+		for(int i = 0;i<size/8+1;i++){
 			printBinary(data[i]);
 			// printf("%d ",data[i]);
 		}

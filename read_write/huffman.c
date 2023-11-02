@@ -223,12 +223,14 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,starting_run,0);
 	freeBitrun(starting_run);
 	freeHeap(min_heap);
+	#ifdef DEBUG
 	for(int i = 0;i<heap_size;i++){
 		if(encoded_bits[i] != NULL){
 			printf("%c: ",i);
 			printBitrun(encoded_bits[i]);
 		}
 	}
+	#endif
 	uint8_t* output_data = compressData(encoded_bits
 	,heap_size,data,data_length,size);
 	for(int i = 0;i<heap_size;i++){

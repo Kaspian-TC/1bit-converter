@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "../data_types/minheap.h"
 #include "huffman.h"
 #include "../data_types/bitrun.h"
@@ -217,10 +218,10 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	{
 		encoded_bits[i] = NULL;
 	}
-	// printTree(tree,heap_size,head_id,0);
 	Bitrun * starting_run = createBitRun();
 	starting_run = shiftAndAdd(starting_run,true);
-	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,starting_run,0);
+	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,
+	starting_run,0);
 	freeBitrun(starting_run);
 	freeHeap(min_heap);
 	#ifdef DEBUG
@@ -231,12 +232,25 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 		}
 	}
 	#endif
-	uint8_t* output_data = compressData(encoded_bits
+
+	uint8_t* compressed_data = compressData(encoded_bits
 	,heap_size,data,data_length,size);
 	for(int i = 0;i<heap_size;i++){
 		if(encoded_bits[i] != NULL){
 			freeBitrun(encoded_bits[i]);
 		}
 	}
+	int tree_size = sizeof(TreeNode) * heap_size;
+	uint8_t* byte_array = malloc(tree_size);
+	memcpy(byte_array,tree,tree_size);
+	TreeNode new_tree[heap_size];
+	memcpy(new_tree,byte_array,tree_size);
+	for(int i = 0; i< tree_size;i++){
+		printf("%d ",byte_array[i]);
+	}
+	for(int i = 0; i< heap_size; i++){
+		printf("id: %d, prio: %f\n",new_tree[i] )
+	}
+	uint8_t output_data;
 	return output_data;
 }

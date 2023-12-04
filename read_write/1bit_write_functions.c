@@ -132,7 +132,8 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 			byteArray[i] = (uint8_t) inputString[i];
 		}
 		#endif
-		data = huffmanEncode(omg->data,ceil((float)(omg->sx* omg->sy)/8),&size);
+		data = huffmanEncode(omg->data,ceil((float)(omg->sx* omg->sy)/8),
+		&size);
 		for(int i = 0;i<size/8+1;i++){
 			printBinary(data[i]);
 			// printf("%d ",data[i]);

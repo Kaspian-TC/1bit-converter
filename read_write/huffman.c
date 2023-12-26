@@ -188,7 +188,9 @@ uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
 	for(int i = 0;i<input_data_length;i++){
 		char current_char = input_data[i];
 		const Bitrun * current_run = encoded_bits[(uint8_t)current_char];
-		output_data_index = assignBitrunToMemory(current_run,output_data,output_data_index);
+		output_data_index = assignBitrunToMemory(current_run,output_data,
+		output_data_index);
+		
 		if(output_data_index == -1){
 			fprintf(stderr,"Error in compressData: output_data_index == -1\n");
 			return NULL;
@@ -210,9 +212,12 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	TreeNode tree[heap_size];
 	double head_priority;
 	int head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
+	freeHeap(min_heap); //shouldn't be required after
+
 	// If uint256_t existed in c99, then this would be much better
 	// Until I can figure that out, I will work with my current solution
 	
+	// Should be in another function
 	Bitrun * encoded_bits[heap_size];
 	for (int i = 0; i < heap_size; i++)
 	{
@@ -223,7 +228,7 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,
 	starting_run,0);
 	freeBitrun(starting_run);
-	freeHeap(min_heap);
+	
 	#ifdef DEBUG
 	for(int i = 0;i<heap_size;i++){
 		if(encoded_bits[i] != NULL){
@@ -232,25 +237,30 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 		}
 	}
 	#endif
-
-	uint8_t* compressed_data = compressData(encoded_bits
-	,heap_size,data,data_length,size);
+	long compress_data_size;
+	uint8_t* compressed_data = compressData(encoded_bits,
+	heap_size,data,data_length,&compress_data_size);
+	
+	//free all bitruns 
 	for(int i = 0;i<heap_size;i++){
-		if(encoded_bits[i] != NULL){
+		if(encoded_bits[i] != NULL){ // if null, then not assigned memory
 			freeBitrun(encoded_bits[i]);
 		}
 	}
-	int tree_size = sizeof(TreeNode) * heap_size;
-	uint8_t* byte_array = malloc(tree_size);
-	memcpy(byte_array,tree,tree_size);
+	size_t tree_size = sizeof(TreeNode) * heap_size;
+	
+	uint8_t* output_data = malloc(
+		sizeof(uint8_t) + tree_size + sizeof(uint8_t)*data_length);
+
+	output_data[0] = head_id;
+	//longer names matter when mistakes cost the difference
+	uint8_t tree_portion_of_byte_array = output_data + 1;
+	memcpy(tree_portion_of_byte_array,tree,tree_size);
+	uint8_t data_portion_of_byte_array = tree_portion_of_byte_array + tree_size;
+	memcpy(data_portion_of_byte_array,compressed_data,compress_data_size);
+	/* Takes byte array and assigns it to the tree_size, useful in reading code 
 	TreeNode new_tree[heap_size];
 	memcpy(new_tree,byte_array,tree_size);
-	for(int i = 0; i< tree_size;i++){
-		printf("%d ",byte_array[i]);
-	}
-	for(int i = 0; i< heap_size; i++){
-		printf("id: %d, prio: %f\n",new_tree[i] )
-	}
-	uint8_t output_data;
+	*/
 	return output_data;
 }

@@ -44,12 +44,12 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
 	return;
 }
 #endif // DEBUG
-static void printBinary(uint8_t number){
+/*static void printBinary(uint8_t number){
 	for(int i = 7;i>=0;i--){
 		printf("%d",number>>i & 1);
 	}
 	return;
-}
+}*/
 /**
  * @brief assignEncodedBits holds a run (current_run) that represents the 
  * current run STARTING AFTER the first 1. ie 00101001 represents 01001. 8 bit 
@@ -74,13 +74,15 @@ static void assignEncodedBits(Bitrun * encoded_bits[],
 	// if right, 0 if left 1
 	TreeNode head = combined_leaves[head_id-size];
 	//  Call left child
-	Bitrun * left_run = shiftAndAdd(createAndCopyBitrun(current_run),false); //bit shift left
+	//bit shift left
+	Bitrun * left_run = shiftAndAdd(createAndCopyBitrun(current_run),false);
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.left_id,
 	head.left_priority,left_run,depth+1);
 	freeBitrun(left_run);
 
 	// Call right child
-	Bitrun * right_run = shiftAndAdd(createAndCopyBitrun(current_run),true); //bit shift left and add 1
+	//bit shift left and add 1
+	Bitrun * right_run = shiftAndAdd(createAndCopyBitrun(current_run),true); 
 	assignEncodedBits(encoded_bits,combined_leaves,size,head.right_id,
 	head.right_priority,right_run,depth+1);
 	freeBitrun(right_run);
@@ -248,19 +250,20 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 		}
 	}
 	size_t tree_size = sizeof(TreeNode) * heap_size;
-	
-	uint8_t* output_data = malloc(
-		sizeof(uint8_t) + tree_size + sizeof(uint8_t)*data_length);
 
+	printf("tree: %d, compress_data: %ld\n",tree_size,compress_data_size);
+	*size = (long)(sizeof(uint8_t) + tree_size + sizeof(uint8_t)*compress_data_size);
+	uint8_t* output_data = malloc(*size);
 	output_data[0] = head_id;
-	//longer names matter when mistakes cost the difference
-	uint8_t tree_portion_of_byte_array = output_data + 1;
+	//longer names matter when mistakes cost the difference 
+	uint8_t* tree_portion_of_byte_array = output_data + 1;
 	memcpy(tree_portion_of_byte_array,tree,tree_size);
-	uint8_t data_portion_of_byte_array = tree_portion_of_byte_array + tree_size;
+	uint8_t* data_portion_of_byte_array = tree_portion_of_byte_array + tree_size;
 	memcpy(data_portion_of_byte_array,compressed_data,compress_data_size);
 	/* Takes byte array and assigns it to the tree_size, useful in reading code 
 	TreeNode new_tree[heap_size];
 	memcpy(new_tree,byte_array,tree_size);
 	*/
+	
 	return output_data;
 }

@@ -140,7 +140,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 		}
 		//in .2 it will first list the total size as to not cause confusion
 		fprintf(f, "%ld\n", size);
-		fwrite(data, (size_t)(size/8+1), sizeof(uint8_t), f);
+		fwrite(data, (size_t)(size), sizeof(uint8_t), f);
 		if((size/8+1)>=ceil((float)(omg->sx* omg->sy)/8)){
 			fprintf(stderr, "encoding resulted in negative compression, will"
 			" now regularly write\n");

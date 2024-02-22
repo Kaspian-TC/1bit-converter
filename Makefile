@@ -24,7 +24,7 @@ $(EXE_NAME): $(OBJS)
 INPUT_PPM = david
 1BIT_FILE = david
 PNG_NAME = david.png
-1BIT_VER = .2
+1BIT_VER = .0
 
 # phony targets to help with testing
 create: $(EXE_NAME)

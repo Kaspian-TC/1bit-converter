@@ -31,7 +31,6 @@ int main(int argc, char** argv){
 	-co : colour flag for create, followed by two hexidecimals in form #XXXXXX
 	(unimplemented)
 	*/
-	printf("runs\n");
 
 	bool is_read = 0;
 	bool is_create = 0;

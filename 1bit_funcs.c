@@ -61,7 +61,7 @@ void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_si
 			for(int i = 0; i<x_size;i++){
 				for(int j = 0; j<y_size;j++){
 					int threshhold = threshhold_map[i+j*x_size];
-					if(x+i != img->sx && y+j != img->sy){
+					if(x+i < img->sx && y+j < img->sy){
 						Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
 						if(threshhold_range*pixelSum(currentPixel)>(threshhold+0)*765){// +1 to focus on the darker images 
 							currentPixel = (Pixel) {255,255,255};
@@ -73,7 +73,6 @@ void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_si
 					}
 				}
 			}
-			
 		}
 	}
 	return;
@@ -120,7 +119,7 @@ static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float q
 		float r = (float)c.R;
 		float g = (float)c.G;
 		float b = (float)c.B;
-		r += quant_err_R * debt/16.0;
+		r += quant_err_R * debt/16.0; // why are we dividing by 16?
 		g += quant_err_G * debt/16.0;
 		b += quant_err_B * debt/16.0;
 		c.R= correctError(r);
@@ -140,14 +139,14 @@ void imgErrorDither(Image * img, int factor,int *error_kernel,int *location_posi
 			float old_g = oldpixel.G;
 			float old_b = oldpixel.B;
 			
-			Pixel newpixel; //newpixel := find_closest_palette_color(oldpixel)
+			Pixel newpixel; //newpixelï¿½:= find_closest_palette_color(oldpixel)
 			newpixel.R = (uint8_t)round(factor * old_r / 255) * (255/factor);
 			newpixel.G = (uint8_t)round(factor * old_g / 255) * (255/factor);
 			newpixel.B = (uint8_t)round(factor * old_b / 255) * (255/factor);
 			
-			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y] := newpixel
+			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y]ï¿½:= newpixel
 			
-			float quant_err_R = old_r-newpixel.R; //quant_error := oldpixel - newpixel
+			float quant_err_R = old_r-newpixel.R; //quant_errorï¿½:= oldpixel - newpixel
 			float quant_err_G = old_g-newpixel.G;
 			float quant_err_B = old_b-newpixel.B;
 			
@@ -196,7 +195,7 @@ static uint8_t calcAvgGrey(Image *img){
 	for(long i = 0; i<imgSize -1;i++){
 		average += pixelSum(getPixel(img,i));
 	}
-	return (uint8_t)round(average/(imgSize*3));
+	return (uint8_t)round((1.0*average)/(imgSize*3));
 }
 /* Converts type Image to OneImage, but assumes the data has been converted already */
 OneImage* convertImgToOne(Image *img){
@@ -242,33 +241,6 @@ void averageColourImage(Image* img){
 	}
 	return;
 }
-/* OneImage* convertAvgImgToOne(Image *img){//converts type Image to OneImage
-	if (img != NULL) {
-		OneImage *omg = (OneImage *)calloc(1, sizeof(OneImage));
-		int nameLen = strlen(img->filename);
-		omg->filename = malloc(nameLen+2);
-		strcpy(omg->filename,img->filename);
-		omg->filename[nameLen-3] = '1';
-		omg->filename[nameLen-2] = 'b';
-		omg->filename[nameLen-1] = 'i';
-		omg->filename[nameLen] = 't';
-		omg->filename[nameLen+1] = '\0';
-		omg->data = calloc((size_t)ceil((float)(img->sx * img->sy)/8), sizeof(uint8_t));
-		omg->sx = img->sx;
-		omg->sy = img->sy;
-		long imgSize = img->sx * img->sy;
-		int avgLimit = calcAvgGrey(img);
-		for(long i = 0; i<imgSize;i++){
-			// 1 is white, 0 is black
-			if(avgRGB(getPixel(img,i)) >= avgLimit && avgLimit != 255){
-				assignBit(omg,i,1);
-			}
-		}
-		return omg;
-	}
-	fprintf(stderr, "Unable to allocate memory for Oneimage structure\n");
-	return (NULL);
-} */
 Image* convertOneToImg(OneImage* omg){
 	if(omg != NULL) {
 		Image *img = (Image *)calloc(1, sizeof(Image));

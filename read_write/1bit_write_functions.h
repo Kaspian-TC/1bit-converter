@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "../1bit_types.h"
+#include <stdbool.h>
+#include "../data_types/1bit_types.h"
 // #include "../imgutils.h"//TODO: remove later
 #ifndef __1BIT_FUNCS_H__
 /* typedef struct {

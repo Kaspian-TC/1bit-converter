@@ -13,7 +13,7 @@ char * toUpper(char * s){ //changes the string to be uppercase only
 	}
 	return s;
 }
-unsigned char fileIsValid(char *filename){// return 1 if valid, 0 otherwise
+unsigned char fileIsReadable(char *filename){// return 1 if valid, 0 otherwise
 	FILE *f = fopen(filename, "r");
 	if (f == NULL) {
 		fprintf(stderr,"Unable to open file %s. Check the path.\n",filename);
@@ -28,12 +28,14 @@ int main(int argc, char** argv){
 	-u : upgrade flag
 	-i : precides the two file paths
 	-d : precides dithering type
-	-co : colour flag for create, must be followed by two hexidecimals in form #XXXXXX
+	-co : colour flag for create, followed by two hexidecimals in form #XXXXXX
+	(unimplemented)
 	*/
-	char is_read = 0;
-	char is_create = 0;
-	char is_upgrade = 0;
-	char is_dithered = 0;
+
+	bool is_read = 0;
+	bool is_create = 0;
+	bool is_upgrade = 0;
+	bool is_dithered = 0;
 	
 	char * dither_type;
 	char * input_file;
@@ -65,7 +67,7 @@ int main(int argc, char** argv){
 		fprintf(stderr,"must include -r,-c, or -u (but only one)\n");
 		return 1;
 	}
-	if(!(fileIsValid(input_file))){
+	if(!(fileIsReadable(input_file))){
 		fprintf(stderr,"input file path invalid or doesn't exist\n");
 		return 1;
 	}
@@ -102,7 +104,7 @@ int main(int argc, char** argv){
 		else{
 			averageColourImage(img);
 		}
-		omg = convertImgToOne(img); //always finds the average and threshhold dithers
+		omg = convertImgToOne(img); //threshhold dithers without avg
 		
 		if(file_version != NULL){
 			oneBitWrite(omg, output_file,file_version);

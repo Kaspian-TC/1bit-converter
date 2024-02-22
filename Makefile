@@ -1,55 +1,57 @@
 CC = gcc
 CFLAGS = -Wall -g 
-SRCS = main_code.c 1bit_funcs.c imgutils.c read_write/1bit_read_functions.c read_write/1bit_write_functions.c
+EXE_NAME = 1bit_converter.exe
+SRC_DIR = .
+SRCS := $(wildcard *.c) $(wildcard */*.c)
 OBJS = $(SRCS:.c=.o)
+ifeq ($(OS),Windows_NT)
+    PLATFORM_OS=WINDOWS
+else
+	PLATFORM_OS=UNIX
+	EXE_NAME = ./1bit_converter.exe
+	CFLAGS += -lm
+endif
 
-# 1bit_converter.exe: main_code.c imgutils.o 1bit_funcs.o 1bit_read_functions.o 1bit_write_functions.o
-	# $(CC) $(CFLAGS) -o $@ main_code.c imgutils.o 1bit_funcs.o 1bit_read_functions.o 1bit_write_functions.o
-# imgutils.o: imgutils.c
-	# $(CC) $(CFLAGS) -c imgutils.c -o $@
-# 1bit_funcs.o: 1bit_funcs.c
-	# $(CC) $(CFLAGS) -c 1bit_funcs.c -o $@
-# 1bit_read_functions.o: 1bit_read_functions.c
-	# $(CC) $(CFLAGS) -c 1bit_read_functions.c -o $@
-# 1bit_write_functions.o: 1bit_write_functions.c
-	# $(CC) $(CFLAGS) -c 1bit_write_functions.c -o $@
-# read_writes:
-	# $(MAKE) -C read_write
-# Define the source files and object files
+# main target
+$(EXE_NAME): $(OBJS)
+	$(CC) $^ -o $@  $(CFLAGS)
 
-# Define the main target
-1bit_converter: $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
-
-# Define the pattern rule for compiling .c files into .o files
+# pattern rule for compiling .c files into .o files
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-# Define a variable for the subdirectory
-SUBDIR = read_write
 
-# Define dependencies for the files in the subdirectory
-$(SUBDIR)/%.o: $(SUBDIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-INPUT_PPM = anime_image
-1BIT_FILE = anime_image
+INPUT_PPM = david
+1BIT_FILE = david
 PNG_NAME = david.png
-1BIT_VER = .1
+1BIT_VER = .0
 
-create: 1bit_converter.exe
-	$^ -i "ppm images"/$(INPUT_PPM).ppm "1bit images"/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) -d
-read: 1bit_converter.exe
-	$^ -i "1bit images"/$(1BIT_FILE).1bit "ppm images"/$(1BIT_FILE)_test.ppm -r
-upgrade: 1bit_converter.exe
-	$^ -i "1bit images"/$(1BIT_FILE).1bit $(1BIT_FILE)_2.1bit -u $(1BIT_VER)
-png: 1bit_converter.exe
-	$^ -i "png images"/$(PNG_NAME) "1bit images"/$(PNG_NAME).1bit -c $(1BIT_VER) -d bayer-2
-	$^ -i "1bit images"/$(PNG_NAME).1bit "PNG images"/1bit_$(PNG_NAME).png -r
-gdb: 1bit_converter.exe
-	gdb 1bit_converter.exe
+# phony targets to help with testing
+create: $(EXE_NAME)
+	$(EXE_NAME) -i PPM_images/$(INPUT_PPM).ppm 1bit_images/$(INPUT_PPM)_2.1bit -c $(1BIT_VER) 
+read: $(EXE_NAME)
+	$(EXE_NAME) -i 1bit_images/$(1BIT_FILE).1bit PPM_images/$(1BIT_FILE)_test.ppm -r
+upgrade: $(EXE_NAME)
+	$(EXE_NAME) -i 1bit_images/$(1BIT_FILE).1bit $(1BIT_FILE)_2.1bit -u $(1BIT_VER)
+png: $(EXE_NAME)
+	$(EXE_NAME) -i png_images/$(PNG_NAME) 1bit_images/$(PNG_NAME).1bit -c $(1BIT_VER) -d bayer-2
+	$(EXE_NAME) -i 1bit_images/$(PNG_NAME).1bit png_images/1bit_$(PNG_NAME).png -r
+gdb: $(EXE_NAME)
+	gdb $(EXE_NAME)
+gdb-create:
+	gdb $(EXE_NAME) -ex run -i ppm_images/$(INPUT_PPM).ppm 1bit_images/$(INPUT_PPM)_2.1bit -c $(1BIT_VER)
+gdb-read:
+	gdb $(EXE_NAME) -ex run -i 1bit_images/$(PNG_NAME).1bit png_images/1bit_$(PNG_NAME).png -r
+
+# phony target to clean up the directory
 clean:
-	$(MAKE) clean -C read_write
-	del 1bit_converter.exe
-	del *.o
+ifeq ($(PLATFORM_OS),WINDOWS)
+	del /Q /S $(EXE_NAME) *.o
+else
+	rm -rf $(EXE_NAME)
+	rm -rf *.o
+	rm -rf read_write/*.o
+	rm -rf data_types/*.o
+endif
+
 	

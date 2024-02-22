@@ -1,16 +1,9 @@
 # 1bit file converter
 
-Compression can be lossless or lossy. Lossless compression only differs in implementation, but lossy just means some information is lost. Image file formats like jpg use clever ways to compress file sizes without a huge loss of visual fedelity, but what if you wanted to go further? 
-1bit is a file type that only stores two colours, 1 and 0. Hence, each pixel
-is represented with at most 1 bit. This project is for converting different 
-image file types to 1bit, and converting them back. As of last writing this, 
-this project supports various types of dithering, run length encoding, and the
- ability to change encoding for existing files.
 
-### Compiling
-You can compile 1bit-converter.exe by getting the repository and running make. 
-Currently it has only been tested on Windows, but other operating systems 
+Compression can be lossless or lossy. Lossless compression only differs in implementation, but lossy just means some information is lost. Image file formats like jpg use clever ways to compress file sizes without a huge loss of visual fedelity, but what if you wanted to go further? 
 should work since this project only uses standard c99.
+
 
 ### Converting from your image file type to 1bit
 To convert from a file type, you need to include some flags.
@@ -47,12 +40,14 @@ You can change from `.0` to `.1` by using the `-u` flag instead of `-c` or `-r`
 
 ### Todo list
 - [ ] Huffman encoding (`.2`)
+- [ ] Huffman encoding
 - [ ] Suport for different colours
 - [ ] Lempel-Zev compression implementaion
 - [ ] DEFALTE (LZ + huffman)
 - [ ] Different error diffusion dithering algorithms
 - [ ] Converting .1 to .0
 - [x] Change folder names so that it can be compatible with both unix and windows environments
+
 
 ### Examples
 [![I dithered this image](https://upload.wikimedia.org/wikipedia/commons/c/c1/Michelangelo%27s_David_-_Floyd-Steinberg.png)](https://upload.wikimedia.org/wikipedia/commons/c/c1/Michelangelo%27s_David_-_Floyd-Steinberg.png)

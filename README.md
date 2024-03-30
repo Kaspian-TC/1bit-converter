@@ -39,7 +39,6 @@ You can change from `.0` to `.1` by using the `-u` flag instead of `-c` or `-r`
 
 ### Todo list
 - [ ] Huffman encoding (`.2`)
-- [ ] Huffman encoding
 - [ ] Suport for different colours
 - [ ] Lempel-Zev compression implementaion
 - [ ] DEFALTE (LZ + huffman)

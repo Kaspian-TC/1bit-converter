@@ -8,7 +8,7 @@ Compression can be lossless or lossy. Lossless compression only differs in imple
 To convert from a file type, you need to include some flags.
 
 For all 1bit operations, you need to include the flag `-i` followed by an input
- file and and output file. Then to specify you want to create a new 1bit, add
+ file and output file. Then to specify you want to create a new 1bit, add
  the `-c` flag. 
 To specify the type of compression, type `.0` or `.1` after `-c` for no 
 compression and run-length compression respectively. `.2` is in progress.
@@ -41,10 +41,9 @@ You can change from `.0` to `.1` by using the `-u` flag instead of `-c` or `-r`
 - [ ] Huffman encoding (`.2`)
 - [ ] Suport for different colours
 - [ ] Lempel-Zev compression implementaion
-- [ ] DEFALTE (LZ + huffman)
+- [ ] DEFLATE (LZ + huffman)
 - [ ] Different error diffusion dithering algorithms
 - [ ] Converting .1 to .0
-- [x] Change folder names so that it can be compatible with both unix and windows environments
 
 
 ### Examples

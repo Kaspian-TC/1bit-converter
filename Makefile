@@ -20,6 +20,8 @@ $(EXE_NAME): $(OBJS)
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
+release: CFLAGS +=-O3
+release: $(EXE_NAME)
 
 INPUT_PPM = david
 1BIT_FILE = david

@@ -6,20 +6,28 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install dependencies
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y gcc make
+
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install make mingw
 
     - name: Build
       run: make release
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: program
         path: ./1bit_converter.exe

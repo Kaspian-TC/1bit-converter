@@ -2,7 +2,7 @@ name: Build and Upload Release
 
 on:
   push:
-    branches: ["release-push-test"]
+    branches: ["main"]
 
 jobs:
   build:

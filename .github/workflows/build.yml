@@ -29,5 +29,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: program
+        name: Artifact-${{ github.sha }}
         path: ./1bit_converter.exe

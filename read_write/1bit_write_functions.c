@@ -3,7 +3,7 @@
 #include "huffman.h"
 #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h" //this should only be included here since this is the WRITE file
+#include "stb/stb_image_write.h" //this should only be included here since this is the WRITE file
 #endif
 
 static void copyData(uint8_t* dest, const uint8_t* src,long length){

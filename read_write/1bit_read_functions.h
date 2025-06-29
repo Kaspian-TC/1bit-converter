@@ -12,7 +12,8 @@
   uint8_t *data;
   int sx, sy;
 } OneImage;
- */#endif
+ */
+#endif
 Image *readImage(char *filename);
 OneImage *read1bitimage(char *filename);
 #endif

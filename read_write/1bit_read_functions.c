@@ -5,7 +5,7 @@
 #define STBI_ONLY_PNG
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNM
-#include "stb_image.h" //this should only be included here since this is the READ file
+#include "stb/stb_image.h" //this should only be included here since this is the READ file
 #endif
  // TODO: credit nothings/stb 
 static char *basename(char *path) {

@@ -56,25 +56,21 @@ static double avgRGB(Pixel current_pixel){
 	return (double)pixelSum(current_pixel)/3;
 }
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
-	for(int y = 0; y< img->sy ;y+=y_size){
-		for(int x = 0; x< img->sx ;x+=x_size){
-			for(int i = 0; i<x_size;i++){
-				for(int j = 0; j<y_size;j++){
-					int threshhold = threshhold_map[i+j*x_size];
-					if(x+i < img->sx && y+j < img->sy){
-						Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
-						if(threshhold_range*pixelSum(currentPixel)>(threshhold+0)*765){// +1 to focus on the darker images 
-							currentPixel = (Pixel) {255,255,255};
-						}
-						else{
-							currentPixel = (Pixel) {0,0,0};
-						}
-						img->data[_INDEX(x+i,y+j,img->sx)] = currentPixel;
-					}
+	for(int y = 0; y< img->sy ;y+=y_size){for(int x = 0; x< img->sx ;x+=x_size){
+		for(int i = 0; i<x_size;i++){for(int j = 0; j<y_size;j++){
+			int threshhold = threshhold_map[i+j*x_size];
+			if(x+i < img->sx && y+j < img->sy){
+				Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
+				if(threshhold_range*pixelSum(currentPixel)>(threshhold+0)*765){// +1 to focus on the darker images 
+					currentPixel = (Pixel) {255,255,255};
 				}
+				else{
+					currentPixel = (Pixel) {0,0,0};
+				}
+				img->data[_INDEX(x+i,y+j,img->sx)] = currentPixel;
 			}
-		}
-	}
+		}}
+	}}
 	return;
 }
 void imgBayerZero(Image * img){

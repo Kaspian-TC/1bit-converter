@@ -22,6 +22,51 @@ unsigned char fileIsReadable(char *filename){// return 1 if valid, 0 otherwise
 	fclose(f);
 	return 1;	
 }
+static int createFile(bool is_dithered,char * input_file, char * dither_type,  char * file_version,char * output_file){
+	Image *img = readImage(input_file);
+	OneImage *omg;
+	if(is_dithered){
+		Image * gray_img = imgGrayscale(img);
+		freeImage(img);
+		img = gray_img; //grayscale the image
+
+		char upper_dither_type[strlen(dither_type)+1];
+		strcpy(upper_dither_type,dither_type);
+		toUpper(upper_dither_type);
+		if(strcmp(upper_dither_type,"FLOYD-STEINBERG")==0){ //check what form of dithering it uses
+			ditherFloydSteinberg(img,1);
+		}
+		else if(strcmp(upper_dither_type,"BAYER-0")==0){
+			imgBayerZero(img);
+		}
+		else if(strcmp(upper_dither_type,"BAYER-1")==0){
+			imgBayerOne(img);
+		}
+		else if(strcmp(upper_dither_type,"BAYER-2")==0){
+			imgBayerTwo(img);
+		}
+		else{ // error, end program
+			fprintf(stderr,"invalid dithering type specified\n");
+			freeImage(img);
+			return 1;
+		}
+	}
+	else{
+		averageColourImage(img);
+	}
+	omg = convertImgToOne(img); //threshhold dithers without avg
+	
+	if(file_version != NULL){
+		oneBitWrite(omg, output_file,file_version);
+	}
+	else{
+		oneBitOutput(omg, output_file);
+	}
+	freeOneImage(omg);
+	freeImage(img);
+	return 0;
+	 
+}
 int main(int argc, char** argv){
 	/* -r : read flag
 	-c : create flag
@@ -73,47 +118,10 @@ int main(int argc, char** argv){
 	}
 	
 	if(is_create){
-		Image *img = readImage(input_file);
-		OneImage *omg;
-		if(is_dithered){
-			Image * gray_img = imgGrayscale(img);
-			freeImage(img);
-			img = gray_img; //grayscale the image
-
-			char upper_dither_type[strlen(dither_type)+1];
-			strcpy(upper_dither_type,dither_type);
-			toUpper(upper_dither_type);
-			if(strcmp(upper_dither_type,"FLOYD-STEINBERG")==0){ //check what form of dithering it uses
-				ditherFloydSteinberg(img,1);
-			}
-			else if(strcmp(upper_dither_type,"BAYER-0")==0){
-				imgBayerZero(img);
-			}
-			else if(strcmp(upper_dither_type,"BAYER-1")==0){
-				imgBayerOne(img);
-			}
-			else if(strcmp(upper_dither_type,"BAYER-2")==0){
-				imgBayerTwo(img);
-			}
-			else{ // error, end program
-				fprintf(stderr,"invalid dithering type specified\n");
-				freeImage(img);
-				return 1;
-			}
+		int is_error = createFile(is_dithered,input_file,dither_type,file_version,output_file);
+		if (is_error == 1){
+			return 1;
 		}
-		else{
-			averageColourImage(img);
-		}
-		omg = convertImgToOne(img); //threshhold dithers without avg
-		
-		if(file_version != NULL){
-			oneBitWrite(omg, output_file,file_version);
-		}
-		else{
-			oneBitOutput(omg, output_file);
-		}
-		freeOneImage(omg);
-		freeImage(img);
 	}
 	else if(is_read){
 		OneImage * omg = read1bitimage(input_file);

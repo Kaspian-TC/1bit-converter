@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "imgutils.h"
+// #include "imgutils.h"
 #include "data_types/1bit_types.h"
 #ifndef __1BIT_TYPES__
 #define __1BIT_TYPES__
@@ -14,22 +14,18 @@ typedef struct {
   int sx, sy;
 } OneImage;
 #endif
+
 void freeOneImage(OneImage *om);
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range);
 void imgBayerZero(Image * img);
 void imgBayerOne(Image * img);
 void imgBayerTwo(Image * img);
-// void imgDither(Image * img, int factor);
 void imgErrorDither(Image * img, int factor,int *errorKernel,int *locationPositions,int kernelSize);
 void ditherFloydSteinberg(Image * img, int factor);
 Image * imgGrayscale(Image * img);
 OneImage* convertImgToOne(Image *img);
 void averageColourImage(Image* img);
-// OneImage* convertAvgImgToOne(Image *img);
 Image* convertOneToImg(OneImage* omg);
 void oneBitOutput(OneImage *omg, char *filename);
-// Image *readImage(char *filename);
-// OneImage *read1bitimage(char *filename);
-// void oneBitWrite(OneImage *omg, char *filename, char *type);
 
 #endif

@@ -7,16 +7,6 @@
 #define STBI_ONLY_PNM
 #include "stb/stb_image.h" //this should only be included here since this is the READ file
 #endif
- // TODO: credit nothings/stb 
-static char *basename(char *path) {
-  int l = strlen(path)-1;
-  for (int i = l; i >= 0; i--) {
-    if (path[i] == '/' || path[i] == '\\') {
-      return &path[i+1];
-    }
-  }
-  return path;
-} 
  
 static char assignValues(uint8_t *data,const long pos_1,const int amount, const long length, const uint8_t value){//helper function for runLengthDecode
 	if(pos_1+amount>=length){
@@ -63,68 +53,65 @@ static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start a
 }
 
 OneImage *read1bitimage(char *filename) {
-	long x;
-	char *y;
+	long bytes_read;
+	char *buffer_output;
 	OneImage *omg = (OneImage *)calloc(1, sizeof(OneImage));
-	if (omg != NULL) {
-		char buffer[1024];
-		char type;
-		FILE *f = fopen(filename, "rb+");
-		if (f == NULL) {
-			fprintf(stderr,"Unable to open file %s in read1bitimage. Check the path.\n",filename);
-			exit(1);
-		}
-		char *shortend_filename = basename(filename); 
-		omg->filename = malloc(strlen(shortend_filename)+1);
-		strcpy(omg->filename,shortend_filename);
-
-		y = fgets(buffer, 1024, f);//Read and check header
-		if (strcmp(buffer, "1bit\n") == 0 || strcmp(buffer, "1bit.0\n") == 0 ) {
-			type = 0;
-		}
-		else if (strcmp(buffer, "1bit.1\n") == 0) {
-			type = 1;
-		}
-		else{
-			fprintf(stderr, "%s: Wrong file format, not a .1bit file.\n", filename);
-			exit(1);
-		}
-		
-		do { y = fgets(buffer, 1024, f); //Skip over comments
-			if(y == NULL){
-				fprintf(stderr, "Error reading file\n");
-				exit(1);
-			}
-		} while (buffer[0] == '#');
-
-		sscanf(buffer, "%d %d\n", &omg->sx, &omg->sy); //Read file size
-
-		omg->data = calloc((size_t)ceil((float)(omg->sx* omg->sy)/8), sizeof(uint8_t));
-		if (omg->data == NULL) {
-			fprintf(stderr, "Out of memory allocating space for image\n"); //calloc returns null when you cannot
-			exit(1);
-		}
-		if(type == 0){
-			x = fread(omg->data, sizeof(uint8_t), (size_t)ceil((float)(omg->sx* omg->sy)/8), f);
-			if(x<(omg->sx * omg->sy)/8){
-				fprintf(stderr, "expected read value %d while actually read %ld\n",(omg->sx * omg->sy)/8,x);
-				exit(1);
-			}
-		}
-		else if(type == 1){
-			x = runLengthDecode(omg->data,f,ceil((float)(omg->sx* omg->sy)/8));
-		}
-		for(int i = 0;i<ceil((float)(omg->sx* omg->sy)/8);i++){
-			// printf("%x ",omg->data[i]);
-		}
-		
-		fclose(f);
-
-		return omg;
+	if (omg == NULL){
+		fprintf(stderr, "Unable to allocate memory for image structure\n");
+		return (NULL);
 	}
+	
+	char buffer[1024];
+	char onebit_type;
+	FILE *f = fopen(filename, "rb+");
+	if (f == NULL) {
+		fprintf(stderr,"Unable to open file %s in read1bitimage. Check the path.\n",filename);
+		exit(1);
+	}
+	char *shortend_filename = basename(filename); 
+	omg->filename = malloc(strlen(shortend_filename)+1);
+	strcpy(omg->filename,shortend_filename);
 
-	fprintf(stderr, "Unable to allocate memory for image structure\n");
-	return (NULL);
+	buffer_output = fgets(buffer, 1024, f);//Read and check header
+	if (strcmp(buffer, "1bit\n") == 0 || strcmp(buffer, "1bit.0\n") == 0 ) {
+		onebit_type = 0;
+	}
+	else if (strcmp(buffer, "1bit.1\n") == 0) {
+		onebit_type = 1;
+	}
+	else{
+		fprintf(stderr, "%s: Wrong file format, not a .1bit file.\n", filename);
+		exit(1);
+	}
+	
+	do { buffer_output = fgets(buffer, 1024, f); //Skip over comments
+		if(buffer_output == NULL){
+			fprintf(stderr, "Error reading file\n");
+			exit(1);
+		}
+	} while (buffer[0] == '#');
+
+	sscanf(buffer, "%d %d\n", &omg->sx, &omg->sy); //Read file size
+
+	omg->data = calloc((size_t)ceil((float)(omg->sx* omg->sy)/8), sizeof(uint8_t));
+	if (omg->data == NULL) {
+		fprintf(stderr, "Out of memory allocating space for image\n"); //calloc returns null when you cannot
+		exit(1);
+	}
+	if(onebit_type == 0){
+		bytes_read = fread(omg->data, sizeof(uint8_t), (size_t)ceil((float)(omg->sx* omg->sy)/8), f);
+		if(bytes_read<(omg->sx * omg->sy)/8){
+			fprintf(stderr, "expected read value %d while actually read %ld\n",(omg->sx * omg->sy)/8,bytes_read);
+			exit(1);
+		}
+	}
+	else if(onebit_type == 1){
+		bytes_read = runLengthDecode(omg->data,f,ceil((float)(omg->sx* omg->sy)/8));
+	}
+	
+	fclose(f);
+
+	return omg;
 }
 Image *readImage(char *filename){ // returns the Image type 
 
@@ -137,11 +124,11 @@ Image *readImage(char *filename){ // returns the Image type
     img->filename = malloc(strlen(shortend_filename));
 	strcpy(img->filename,shortend_filename);
     
-	int width, height, bpp, ok;
+	int width, height, bpp, file_is_readable;
 	
-    ok = stbi_info(filename, &width, &height, &bpp);
+    file_is_readable = stbi_info(filename, &width, &height, &bpp);
 	
-	if(!ok){
+	if(!file_is_readable){
 		fprintf(stderr, "File type not supported\n");
 		free(img->filename);
 		free(img);

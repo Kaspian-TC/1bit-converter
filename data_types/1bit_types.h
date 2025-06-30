@@ -2,8 +2,10 @@
 #define __1BIT_TYPES__
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-#ifndef __IMGUTILS_H__
+#include <string.h>
+
 typedef struct {
   uint8_t R;
   uint8_t G;
@@ -14,11 +16,15 @@ typedef struct {
   Pixel *data; // Actual pixel data
   int sx, sy;
 } Image;
-#endif
 typedef struct {
   char *filename;         
   uint8_t *data; // Actual data
   int sx, sy;
 } OneImage;
 int getOneImageByteLength(OneImage *omg);
+Pixel getPixel(Image *im, int pixIdx);
+Image *newImage(int sx, int sy);
+char *basename(char *path);
+void freeImage(Image *im);
+
 #endif

@@ -251,7 +251,7 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	}
 	size_t tree_size = sizeof(TreeNode) * heap_size;
 
-	printf("tree: %d, compress_data: %ld\n",tree_size,compress_data_size);
+	// printf("tree: %d, compress_data: %ld\n",tree_size,compress_data_size);
 	*size = (long)(sizeof(uint8_t) + tree_size + sizeof(uint8_t)*compress_data_size);
 	uint8_t* output_data = malloc(*size);
 	output_data[0] = head_id;

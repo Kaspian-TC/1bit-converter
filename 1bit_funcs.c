@@ -58,16 +58,14 @@ static double avgRGB(Pixel current_pixel){
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
 	for(int y = 0; y< img->sy ;y+=y_size){for(int x = 0; x< img->sx ;x+=x_size){
 		for(int i = 0; i<x_size;i++){for(int j = 0; j<y_size;j++){
-			int threshhold = threshhold_map[i+j*x_size];
-			if(x+i < img->sx && y+j < img->sy){
-				Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
-				if(threshhold_range*pixelSum(currentPixel)>(threshhold+0)*765){// +1 to focus on the darker images 
-					currentPixel = (Pixel) {255,255,255};
-				}
-				else{
-					currentPixel = (Pixel) {0,0,0};
-				}
-				img->data[_INDEX(x+i,y+j,img->sx)] = currentPixel;
+			float threshhold = threshhold_map[_INDEX(i,j,x_size)] + 0.5; //0.5 is a normalization constant
+			if(x+i < img->sx && y+j < img->sy){ // Check makes sure it doesn't go out of bounds
+				Pixel current_pixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
+				Pixel new_Pixel;
+				new_Pixel.R = (current_pixel.R*threshhold_range >= threshhold*255 ? 255 : 0);
+				new_Pixel.G = (current_pixel.G*threshhold_range >= threshhold*255 ? 255 : 0);
+				new_Pixel.B = (current_pixel.B*threshhold_range >= threshhold*255 ? 255 : 0);
+				img->data[_INDEX(x+i,y+j,img->sx)] = new_Pixel;
 			}
 		}}
 	}}

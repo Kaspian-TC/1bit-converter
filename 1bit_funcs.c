@@ -113,9 +113,9 @@ static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float q
 		float r = (float)c.R;
 		float g = (float)c.G;
 		float b = (float)c.B;
-		r += quant_err_R * debt/16.0; // why are we dividing by 16?
-		g += quant_err_G * debt/16.0;
-		b += quant_err_B * debt/16.0;
+		r += quant_err_R * debt;
+		g += quant_err_G * debt;
+		b += quant_err_B * debt;
 		c.R= correctError(r);
 		c.G= correctError(g);
 		c.B= correctError(b);
@@ -124,7 +124,7 @@ static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float q
 	return;
 }
 
-void imgErrorDither(Image * img, int factor,int *error_kernel,int *location_positions,int kernelSize){
+void imgErrorDither(Image * img, int colour_count,float *error_kernel,int *location_positions,int kernelSize){
 	for(int y = 0; y< img->sy ;y++){
 		for(int x = 0; x< img->sx ;x++){
 			
@@ -134,9 +134,9 @@ void imgErrorDither(Image * img, int factor,int *error_kernel,int *location_posi
 			float old_b = oldpixel.B;
 			
 			Pixel newpixel; //newpixel�:= find_closest_palette_color(oldpixel)
-			newpixel.R = (uint8_t)round(factor * old_r / 255) * (255/factor);
-			newpixel.G = (uint8_t)round(factor * old_g / 255) * (255/factor);
-			newpixel.B = (uint8_t)round(factor * old_b / 255) * (255/factor);
+			newpixel.R = (uint8_t)round(colour_count * old_r / 255) * (255/colour_count);
+			newpixel.G = (uint8_t)round(colour_count * old_g / 255) * (255/colour_count);
+			newpixel.B = (uint8_t)round(colour_count * old_b / 255) * (255/colour_count);
 			
 			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y]�:= newpixel
 			
@@ -160,12 +160,21 @@ void imgErrorDither(Image * img, int factor,int *error_kernel,int *location_posi
 	return;
 }
 void ditherFloydSteinberg(Image * img, int factor){
-	int error_kernel[4] = {7,3,5,1};
+	float error_kernel[4] = {7.0/16,3.0/16,5.0/16,1.0/16};
 	int location_positions[4][2] = 
 	{
 		{1,0},{-1,1},{0,1},{1,1}
 	};
 	imgErrorDither(img,factor,error_kernel,location_positions[0],4);
+	return;
+}
+void ditherAtkinson(Image * img, int factor){
+	float error_kernel[6] = {1.0/8,1.0/8,1.0/8,1.0/8,1.0/8,1.0/8};
+	int location_positions[6][2] = 
+	{
+		{1,0},{2,0},{-1,1},{0,1},{1,1},{0,2}
+	};
+	imgErrorDither(img,factor,error_kernel,location_positions[0],6);
 	return;
 }
 Image * imgGrayscale(Image * img){//returns grayscale of img

@@ -36,6 +36,9 @@ static int createFile(bool is_dithered,char * input_file, char * dither_type,  c
 		if(strcmp(upper_dither_type,"FLOYD-STEINBERG")==0){ //check what form of dithering it uses
 			ditherFloydSteinberg(img,1);
 		}
+		else if(strcmp(upper_dither_type,"ATKINSON")==0){ 
+			ditherAtkinson(img,1);
+		}
 		else if(strcmp(upper_dither_type,"BAYER-0")==0){
 			imgBayerZero(img);
 		}

@@ -1,6 +1,7 @@
 #include <stdio.h>
 // #include "imgutils.h"
 #include "1bit_funcs.h" 
+#include "dither_funcs.h"
 #include <string.h> 
 #include "read_write/1bit_read_functions.h"
 #include "read_write/1bit_write_functions.h"
@@ -50,6 +51,9 @@ static int createFile(bool is_dithered,char * input_file, char * dither_type,  c
 		}
 		else if(strcmp(upper_dither_type,"BAYER-2")==0){
 			imgBayerTwo(img);
+		}
+		else if(strcmp(upper_dither_type, "RANDOM")==0){
+			randomDither(img);
 		}
 		else{ // error, end program
 			fprintf(stderr,"invalid dithering type specified\n");

@@ -1,15 +1,9 @@
+#include <time.h>
 #include "dither_funcs.h"
+#include "data_types/1bit_types.h"
 #define _INDEX(X,Y,W) ((X) + (Y) * (W))
 
-static uint8_t correctError(float input_val){//input value
-	if(input_val>255){
-		return 255;
-	}
-	else if(input_val<0){
-		return 0;
-	}
-	return (uint8_t)input_val;
-}
+
 
 /* vvvvvvvDITHER ALGORITHMSvvvvvvv */
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
@@ -63,7 +57,17 @@ void imgBayerTwo(Image * img){
 	imgThreshholdMapDither(img,bayerMatrix[0],8,8,64);
 	return;
 }
-static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 
+// makes sure that quantized image doesn't go out of bounds
+static uint8_t correctError(float input_val){
+	if(input_val>255){
+		return 255;
+	}
+	else if(input_val<0){
+		return 0;
+	}
+	return (uint8_t)input_val;
+}
+static void imgErrorDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 
 	if(x<width && x>=0 && y<height){
 		int index = _INDEX(x,y,width);
 		Pixel c = pixels[index];
@@ -100,7 +104,7 @@ void imgErrorDither(Image * img, int colour_count,float *error_kernel,int *locat
 		float quant_err_B = old_b-newpixel.B;
 		
 		for(int i = 0;i<kernelSize;i++){
-			imgDitherHelper(img->data,
+			imgErrorDitherHelper(img->data,
 							x+location_positions[2*i],
 							y+location_positions[2*i+1],
 							quant_err_R,
@@ -133,10 +137,9 @@ void ditherAtkinson(Image * img, int factor){
 }
 void ditherJarvisJudiceNinke(Image * img, int factor){
 	float error_kernel[12] = {7,5,3,5,7,5,3,1,3,5,3,1};
-	for(int i = 0; i<12;i++){
+	for(int i = 0; i<12;i++)
 		error_kernel[i] /= 48.0;
-		printf("%f\n",error_kernel[i]);
-	}
+
 	int location_positions[12][2] = 
 	{
 		{1,0},{2,0},
@@ -145,5 +148,19 @@ void ditherJarvisJudiceNinke(Image * img, int factor){
 	};
 	imgErrorDither(img,factor,error_kernel,location_positions[0],12);
 	return;
+}
+void randomDither(Image *img){
+	srand(time(NULL));
+	for(int y = 0; y< img->sy ;y++)	{
+		for(int x = 0; x< img->sx ;x++){
+			Pixel current_pixel = getPixel(img,_INDEX(x,y,img->sx));
+			Pixel new_Pixel;
+			int random_number = rand() % 256;
+			new_Pixel.R = (current_pixel.R >= random_number ? 255 : 0);
+			new_Pixel.G = (current_pixel.G >= random_number ? 255 : 0);
+			new_Pixel.B = (current_pixel.B >= random_number ? 255 : 0);
+			img->data[_INDEX(x,y,img->sx)] = new_Pixel;
+		}
+	}
 }
 /* ^^^^^^^DITHER ALGORITHMS^^^^^^^ */

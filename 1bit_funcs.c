@@ -55,6 +55,7 @@ static int pixelSum(Pixel current_pixel){
 static double avgRGB(Pixel current_pixel){
 	return (double)pixelSum(current_pixel)/3;
 }
+/* vvvvvvvDITHER ALGORITHMSvvvvvvv */
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
 	for(int y = 0; y< img->sy ;y+=y_size){for(int x = 0; x< img->sx ;x+=x_size){
 		for(int i = 0; i<x_size;i++){for(int j = 0; j<y_size;j++){
@@ -125,38 +126,35 @@ static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float q
 }
 
 void imgErrorDither(Image * img, int colour_count,float *error_kernel,int *location_positions,int kernelSize){
-	for(int y = 0; y< img->sy ;y++){
-		for(int x = 0; x< img->sx ;x++){
-			
-			Pixel oldpixel = img->data[_INDEX(x,y,img->sx)]; //oldpixel := pixels[x][y]
-			float old_r = oldpixel.R;
-			float old_g = oldpixel.G;
-			float old_b = oldpixel.B;
-			
-			Pixel newpixel; //newpixel�:= find_closest_palette_color(oldpixel)
-			newpixel.R = (uint8_t)round(colour_count * old_r / 255) * (255/colour_count);
-			newpixel.G = (uint8_t)round(colour_count * old_g / 255) * (255/colour_count);
-			newpixel.B = (uint8_t)round(colour_count * old_b / 255) * (255/colour_count);
-			
-			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y]�:= newpixel
-			
-			float quant_err_R = old_r-newpixel.R; //quant_error�:= oldpixel - newpixel
-			float quant_err_G = old_g-newpixel.G;
-			float quant_err_B = old_b-newpixel.B;
-			
-			for(int i = 0;i<kernelSize;i++){
-				imgDitherHelper(img->data,
-								x+location_positions[2*i],
-								y+location_positions[2*i+1],
-								quant_err_R,
-								quant_err_G,
-								quant_err_B,
-								error_kernel[i],
-								img->sx,
-								img->sy);
-			}
+	for(int y = 0; y< img->sy ;y++){for(int x = 0; x< img->sx ;x++){	
+		Pixel oldpixel = img->data[_INDEX(x,y,img->sx)]; //oldpixel := pixels[x][y]
+		float old_r = oldpixel.R;
+		float old_g = oldpixel.G;
+		float old_b = oldpixel.B;
+		
+		Pixel newpixel; //newpixel�:= find_closest_palette_color(oldpixel)
+		newpixel.R = (uint8_t)round(colour_count * old_r / 255) * (255/colour_count);
+		newpixel.G = (uint8_t)round(colour_count * old_g / 255) * (255/colour_count);
+		newpixel.B = (uint8_t)round(colour_count * old_b / 255) * (255/colour_count);
+		
+		img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y]�:= newpixel
+		
+		float quant_err_R = old_r-newpixel.R; //quant_error�:= oldpixel - newpixel
+		float quant_err_G = old_g-newpixel.G;
+		float quant_err_B = old_b-newpixel.B;
+		
+		for(int i = 0;i<kernelSize;i++){
+			imgDitherHelper(img->data,
+							x+location_positions[2*i],
+							y+location_positions[2*i+1],
+							quant_err_R,
+							quant_err_G,
+							quant_err_B,
+							error_kernel[i],
+							img->sx,
+							img->sy);
 		}
-	}
+	}}
 	return;
 }
 void ditherFloydSteinberg(Image * img, int factor){
@@ -177,6 +175,23 @@ void ditherAtkinson(Image * img, int factor){
 	imgErrorDither(img,factor,error_kernel,location_positions[0],6);
 	return;
 }
+void ditherJarvisJudiceNinke(Image * img, int factor){
+	float error_kernel[12] = {7,5,3,5,7,5,3,1,3,5,3,1};
+	for(int i = 0; i<12;i++){
+		error_kernel[i] /= 48.0;
+		printf("%f\n",error_kernel[i]);
+	}
+	int location_positions[12][2] = 
+	{
+		{1,0},{2,0},
+		{-2,1},{-1,1},{0,1},{1,1},{2,1},
+		{-2,2},{-1,2},{0,2},{1,2},{2,2}
+	};
+	imgErrorDither(img,factor,error_kernel,location_positions[0],12);
+	return;
+}
+
+/* ^^^^^^^DITHER ALGORITHMS^^^^^^^ */
 Image * imgGrayscale(Image * img){//returns grayscale of img
 	Image *gray_img = newImage(img->sx,img->sy);
     gray_img->filename = malloc(strlen(img->filename));

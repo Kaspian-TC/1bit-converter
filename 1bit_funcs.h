@@ -23,6 +23,7 @@ void imgBayerTwo(Image * img);
 void imgErrorDither(Image * img, int factor,float *errorKernel,int *locationPositions,int kernelSize);
 void ditherFloydSteinberg(Image * img, int factor);
 void ditherAtkinson(Image * img, int factor);
+void ditherJarvisJudiceNinke(Image * img, int factor);
 Image * imgGrayscale(Image * img);
 OneImage* convertImgToOne(Image *img);
 void averageColourImage(Image* img);

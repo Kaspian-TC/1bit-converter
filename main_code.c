@@ -39,6 +39,9 @@ static int createFile(bool is_dithered,char * input_file, char * dither_type,  c
 		else if(strcmp(upper_dither_type,"ATKINSON")==0){ 
 			ditherAtkinson(img,1);
 		}
+		else if(strcmp(upper_dither_type,"JARVIS-JUDICE-NINKE")==0 || strcmp(upper_dither_type,"JJN")==0){ 
+			ditherJarvisJudiceNinke(img,1);
+		}
 		else if(strcmp(upper_dither_type,"BAYER-0")==0){
 			imgBayerZero(img);
 		}

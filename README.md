@@ -44,7 +44,7 @@ You can change from `.0` to `.1` by using the `-u` flag instead of `-c` or `-r`
 - [ ] DEFLATE (LZ + huffman)
 - [ ] Different error diffusion dithering algorithms
 - [ ] Converting .1 to .0
-
+- [ ] Parallelizing where possible
 
 ### Examples
 [![I dithered this image](https://upload.wikimedia.org/wikipedia/commons/c/c1/Michelangelo%27s_David_-_Floyd-Steinberg.png)](https://upload.wikimedia.org/wikipedia/commons/c/c1/Michelangelo%27s_David_-_Floyd-Steinberg.png)

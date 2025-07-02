@@ -51,7 +51,15 @@ static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start a
 	}while(!feof(f) && d_index<length);
 	return d_index;
 }
-
+static char *basename(char *path) {
+  int l = strlen(path)-1;
+  for (int i = l; i >= 0; i--) {
+    if (path[i] == '/' || path[i] == '\\') {
+      return &path[i+1];
+    }
+  }
+  return path;
+}
 OneImage *read1bitimage(char *filename) {
 	long bytes_read;
 	char *buffer_output;

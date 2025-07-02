@@ -24,7 +24,7 @@ typedef struct {
 int getOneImageByteLength(OneImage *omg);
 Pixel getPixel(Image *im, int pixIdx);
 Image *newImage(int sx, int sy);
-char *basename(char *path);
+// char *basename(char *path);
 void freeImage(Image *im);
 
 #endif

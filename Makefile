@@ -9,7 +9,7 @@ ifeq ($(OS),Windows_NT)
 else
 	PLATFORM_OS=UNIX
 	EXE_NAME = ./1bit_converter.exe
-	CFLAGS += -lm
+	CFLAGS += -lm -fopenmp
 endif
 
 # main target
@@ -20,7 +20,7 @@ $(EXE_NAME): $(OBJS)
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-release: CFLAGS +=-O3
+release: CFLAGS += -s -O3
 release: $(EXE_NAME)
 
 INPUT_PPM = david
@@ -38,6 +38,7 @@ upgrade: $(EXE_NAME)
 png: $(EXE_NAME)
 	$(EXE_NAME) -i png_images/$(PNG_NAME) 1bit_images/$(PNG_NAME).1bit -c $(1BIT_VER) -d bayer-2
 	$(EXE_NAME) -i 1bit_images/$(PNG_NAME).1bit png_images/1bit_$(PNG_NAME).png -r
+	feh png_images/1bit_$(PNG_NAME).png
 gdb: $(EXE_NAME)
 	gdb $(EXE_NAME)
 gdb-create:

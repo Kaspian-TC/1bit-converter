@@ -1,12 +1,14 @@
 #include <time.h>
 #include "dither_funcs.h"
 #include "data_types/1bit_types.h"
+#include <omp.h>
 #define _INDEX(X,Y,W) ((X) + (Y) * (W))
 
 
 
 /* vvvvvvvDITHER ALGORITHMSvvvvvvv */
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
+//	#pragma omp parallel for schedule(dynamic,32)
 	for(int y = 0; y< img->sy ;y+=y_size){for(int x = 0; x< img->sx ;x+=x_size){
 		for(int i = 0; i<x_size;i++){for(int j = 0; j<y_size;j++){
 			float threshhold = threshhold_map[_INDEX(i,j,x_size)] + 0.5; //0.5 is a normalization constant

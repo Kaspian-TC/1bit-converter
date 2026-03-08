@@ -1,7 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g 
 EXE_NAME = 1bit_converter.exe
-SRC_DIR = .
 SRCS := $(wildcard *.c) $(wildcard */*.c)
 OBJS = $(SRCS:.c=.o)
 ifeq ($(OS),Windows_NT)

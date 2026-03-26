@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 // #include "imgutils.h"
 #include "1bit_funcs.h" 
@@ -5,6 +6,7 @@
 #include <string.h> 
 #include "read_write/1bit_read_functions.h"
 #include "read_write/1bit_write_functions.h"
+#include <argp.h>
 
 char * toUpper(char * s){ //changes the string to be uppercase only
 	for(int i = 0; s[i]!='\0';i++){
@@ -14,14 +16,13 @@ char * toUpper(char * s){ //changes the string to be uppercase only
 	}
 	return s;
 }
-unsigned char fileIsReadable(char *filename){// return 1 if valid, 0 otherwise
+bool fileIsReadable(char *filename){// return 1 if valid, 0 otherwise
 	FILE *f = fopen(filename, "r");
 	if (f == NULL) {
-		fprintf(stderr,"Unable to open file %s. Check the path.\n",filename);
-		return 0;
+		return false;
 	}
 	fclose(f);
-	return 1;	
+	return true;	
 }
 static int createFile(bool is_dithered,char * input_file, char * dither_type,  char * file_version,char * output_file){
 	Image *img = readImage(input_file);
@@ -77,6 +78,88 @@ static int createFile(bool is_dithered,char * input_file, char * dither_type,  c
 	return 0;
 	 
 }
+
+struct arguments
+{
+	char * input_file,* output_file, *dither_type,* file_version;
+	char field;
+	bool is_dithered;
+};
+static int parse_opt(int key, char * arg, struct argp_state *state){
+	struct arguments * arguments = state->input;
+	switch (key) {
+	case 'c':
+		{
+			if (arguments->field != 0){
+				argp_failure(state, 1, 0, "too many flags have been passed");
+				break;
+			}
+			else{
+				arguments->field = 'c';
+			}
+			if (arg == NULL){
+				arguments->file_version = ".0";
+			}
+			else{
+				arguments->file_version = arg;
+				printf("in c:%s",arg);
+			}
+		}
+		break;
+	case 'u':
+		{
+			if (arguments->field != 0){
+				argp_failure(state, 1, 0, "too many flags have been passed");
+				break;
+			}
+			arguments->field = 'u';
+			arguments->file_version = arg;
+		}
+		break;
+	case 'd':
+		{
+			arguments->is_dithered = true;
+			arguments->dither_type = arg;
+		}
+	case 'r':
+		{
+			if (arguments->field != 0){
+				argp_failure(state, 1, 0, "too many flags have been passed");
+				break;
+			}
+			if (arg !=NULL){
+				argp_failure(state, 1, 0, "no flag arguments should be passed to read");
+				break;
+			}
+			arguments->field = 'r';
+		}
+		break;
+	case ARGP_KEY_ARG:
+		{
+			if (arguments->input_file == NULL){
+				arguments->input_file = arg;
+			}
+			else if (arguments->output_file == NULL){
+				arguments->output_file = arg;
+			}
+		}
+		break;
+    case ARGP_KEY_END:
+        {
+			if (!arguments->input_file){
+				argp_failure(state, 1, 0, "did not include input file");
+			}
+			if (!arguments->output_file){
+				argp_failure(state, 1, 0, "did not include output file");
+			}
+			if (arguments->field == 0){
+				argp_failure(state, 1, 0, "too few flags have been passed");
+			}
+        }
+        break;
+	}
+	return 0;
+}
 int main(int argc, char** argv){
 	/* -r : read flag
 	-c : create flag
@@ -96,34 +179,35 @@ int main(int argc, char** argv){
 	char * input_file;
 	char * output_file;
 	char * file_version = NULL;
-	for(int i = 1;i<argc;i++){
-		if(strcmp(argv[i],"-r")==0){
-			is_read=1;
-		}
-		else if(strcmp(argv[i],"-c")==0){
-			is_create=1;
-			file_version = argv[i+1];
-		}
-		else if(strcmp(argv[i],"-u")==0){
-			is_upgrade = 1;
-			file_version = argv[i+1];
-		}
-		else if(strcmp(argv[i],"-d")==0){
-			is_dithered = 1;
-			dither_type = argv[i+1];
-		}
-		else if(strcmp(argv[i],"-i")==0 && i+2<argc){
-			input_file = argv[i+1];
-			output_file = argv[i+2];
-		}
+	struct argp_option options[] =
+	{
+		{ "read", 'r',0,OPTION_ARG_OPTIONAL,"Create an image file from a 1bit file"},
+		{ "create", 'c',"VERSION",OPTION_ARG_OPTIONAL,"Create a 1bit file from another image file type"},
+		{ "upgrade", 'u',"VERSION",0,"Create a file with a different level of compression"},
+		{ "dither", 'd',"DITHERTYPE",0,"Select a dithering algorithm"},
+		{0}
+	};
+	struct arguments arguments = {0};
+	struct argp argp = {options,parse_opt,"INPUTFILE OUTPUTFILE"};
+	int argp_error = argp_parse(&argp, argc, argv, 0, 0, &arguments);
+	if (argp_error != 0){
+		return argp_error;
 	}
+	is_read = arguments.field == 'r';
+	is_create = arguments.field == 'c';
+	is_upgrade = arguments.field == 'u';
+	is_dithered = arguments.is_dithered;
+	dither_type = arguments.dither_type;
+	input_file = arguments.input_file;
+	output_file = arguments.output_file;
+	file_version = arguments.file_version;
 	
 	if(is_read + is_create + is_upgrade != 1){
 		fprintf(stderr,"must include -r,-c, or -u (but only one)\n");
 		return 1;
 	}
 	if(!(fileIsReadable(input_file))){
-		fprintf(stderr,"input file path invalid or doesn't exist\n");
+		fprintf(stderr,"Unable to open file %s. Check the path.\n",input_file);
 		return 1;
 	}
 	

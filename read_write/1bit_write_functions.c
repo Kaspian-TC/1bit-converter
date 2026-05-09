@@ -1,6 +1,8 @@
 #include "1bit_write_functions.h"
-// #include "../data_types/minheap.h"
 #include "huffman.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h" //this should only be included here since this is the WRITE file

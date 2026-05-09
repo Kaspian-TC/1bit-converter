@@ -1,4 +1,9 @@
 #include "1bit_funcs.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define _INDEX(X,Y,W) ((X) + (Y) * (W))
 /* This code is dedicated to Josh and Lee, but Lee helped more than Josh 
 */

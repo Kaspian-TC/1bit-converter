@@ -1,10 +1,6 @@
 #ifndef __1BIT_TYPES__
 #define __1BIT_TYPES__
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 
 typedef struct {
   uint8_t R;

@@ -1,4 +1,8 @@
 #include "1bit_types.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 int getOneImageByteLength(OneImage *omg){
   return (int)ceil((float)(omg->sx* omg->sy)/8);
 }

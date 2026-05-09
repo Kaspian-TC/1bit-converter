@@ -2,8 +2,9 @@
 #include "dither_funcs.h"
 #include "data_types/1bit_types.h"
 #define _INDEX(X,Y,W) ((X) + (Y) * (W))
-
-
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* vvvvvvvDITHER ALGORITHMSvvvvvvv */
 void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
@@ -58,14 +59,14 @@ void imgBayerTwo(Image * img){
 	return;
 }
 // makes sure that quantized image doesn't go out of bounds
-static uint8_t correctError(float input_val){
-	if(input_val>255){
+static uint8_t correctError(float colour_channel){
+	if(colour_channel>255){
 		return 255;
 	}
-	else if(input_val<0){
+	else if(colour_channel<0){
 		return 0;
 	}
-	return (uint8_t)input_val;
+	return (uint8_t)colour_channel;
 }
 static void imgErrorDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 
 	if(x<width && x>=0 && y<height){

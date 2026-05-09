@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include <stdio.h>
-// #include "imgutils.h"
 #include "1bit_funcs.h" 
 #include "dither_funcs.h"
 #include <string.h> 

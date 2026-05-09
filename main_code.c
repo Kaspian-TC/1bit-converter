@@ -16,7 +16,7 @@ char * toUpper(char * s){ //changes the string to be uppercase only
 	}
 	return s;
 }
-bool fileIsReadable(char *filename){// return 1 if valid, 0 otherwise
+bool isFileReadable(char *filename){// return 1 if valid, 0 otherwise
 	FILE *f = fopen(filename, "r");
 	if (f == NULL) {
 		return false;
@@ -91,44 +91,45 @@ static int parse_opt(int key, char * arg, struct argp_state *state){
 	case 'c':
 		{
 			if (arguments->field != 0){
-				argp_failure(state, 1, 0, "too many flags have been passed");
+				argp_failure(state, 1, 0, "another flag has been set before create");
 				break;
 			}
-			else{
-				arguments->field = 'c';
-			}
+
+			arguments->field = 'c';
 			if (arg == NULL){
 				arguments->file_version = ".0";
 			}
 			else{
 				arguments->file_version = arg;
-				printf("in c:%s",arg);
 			}
 		}
 		break;
 	case 'u':
 		{
 			if (arguments->field != 0){
-				argp_failure(state, 1, 0, "too many flags have been passed");
+				argp_failure(state, 1, 0, "another flag has been set before upgrade");
 				break;
 			}
 			arguments->field = 'u';
-			arguments->file_version = arg;
+			if (arg == NULL){
+				arguments->file_version = ".0";
+			}
+			else{
+				arguments->file_version = arg;
+			}
 		}
 		break;
 	case 'd':
 		{
 			arguments->is_dithered = true;
+			printf("dither arg: %s\n",arg);
 			arguments->dither_type = arg;
 		}
+		break;
 	case 'r':
 		{
 			if (arguments->field != 0){
-				argp_failure(state, 1, 0, "too many flags have been passed");
-				break;
-			}
-			if (arg !=NULL){
-				argp_failure(state, 1, 0, "no flag arguments should be passed to read");
+				argp_failure(state, 1, 0, "another flag has been set before read");
 				break;
 			}
 			arguments->field = 'r';
@@ -173,17 +174,12 @@ int main(int argc, char** argv){
 	bool is_read = 0;
 	bool is_create = 0;
 	bool is_upgrade = 0;
-	bool is_dithered = 0;
 	
-	char * dither_type;
-	char * input_file;
-	char * output_file;
-	char * file_version = NULL;
 	struct argp_option options[] =
 	{
-		{ "read", 'r',0,OPTION_ARG_OPTIONAL,"Create an image file from a 1bit file"},
+		{ "read", 'r',0,0,"Create an image file from a 1bit file"},
 		{ "create", 'c',"VERSION",OPTION_ARG_OPTIONAL,"Create a 1bit file from another image file type"},
-		{ "upgrade", 'u',"VERSION",0,"Create a file with a different level of compression"},
+		{ "upgrade", 'u',"VERSION",OPTION_ARG_OPTIONAL,"Create a file with a different level of compression"},
 		{ "dither", 'd',"DITHERTYPE",0,"Select a dithering algorithm"},
 		{0}
 	};
@@ -196,40 +192,28 @@ int main(int argc, char** argv){
 	is_read = arguments.field == 'r';
 	is_create = arguments.field == 'c';
 	is_upgrade = arguments.field == 'u';
-	is_dithered = arguments.is_dithered;
-	dither_type = arguments.dither_type;
-	input_file = arguments.input_file;
-	output_file = arguments.output_file;
-	file_version = arguments.file_version;
 	
-	if(is_read + is_create + is_upgrade != 1){
-		fprintf(stderr,"must include -r,-c, or -u (but only one)\n");
-		return 1;
-	}
-	if(!(fileIsReadable(input_file))){
-		fprintf(stderr,"Unable to open file %s. Check the path.\n",input_file);
+	if(!(isFileReadable(arguments.input_file))){
+		fprintf(stderr,"Unable to open file %s. Check the path.\n",arguments.input_file);
 		return 1;
 	}
 	
 	if(is_create){
-		int is_error = createFile(is_dithered,input_file,dither_type,file_version,output_file);
+		int is_error = createFile(arguments.is_dithered,arguments.input_file,arguments.dither_type,arguments.file_version,arguments.output_file);
 		if (is_error == 1){
 			return 1;
 		}
 	}
 	else if(is_read){
-		OneImage * omg = read1bitimage(input_file);
+		OneImage * omg = read1bitimage(arguments.input_file);
 		Image *img2 = convertOneToImg(omg);
-		writeImage(img2, output_file);
+		writeImage(img2, arguments.output_file);
 		freeOneImage(omg);
 		freeImage(img2);
 	}
 	else if(is_upgrade){ // filename filename_2 upgrade type
-		if(file_version == NULL){
-			file_version = ".0";
-		}
-		OneImage * omg = read1bitimage(input_file);
-		oneBitWrite(omg, output_file,file_version);
+		OneImage * omg = read1bitimage(arguments.input_file);
+		oneBitWrite(omg, arguments.output_file,arguments.file_version);
 		freeOneImage(omg);
 	}
 	else{

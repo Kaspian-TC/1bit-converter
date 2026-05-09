@@ -199,7 +199,12 @@ int main(int argc, char** argv){
 	}
 	
 	if(is_create){
-		int is_error = createFile(arguments.is_dithered,arguments.input_file,arguments.dither_type,arguments.file_version,arguments.output_file);
+		int is_error = createFile(
+				arguments.is_dithered,
+				arguments.input_file,
+				arguments.dither_type,
+				arguments.file_version,
+				arguments.output_file);
 		if (is_error == 1){
 			return 1;
 		}

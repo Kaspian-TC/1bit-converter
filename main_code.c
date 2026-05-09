@@ -121,7 +121,6 @@ static int parse_opt(int key, char * arg, struct argp_state *state){
 	case 'd':
 		{
 			arguments->is_dithered = true;
-			printf("dither arg: %s\n",arg);
 			arguments->dither_type = arg;
 		}
 		break;

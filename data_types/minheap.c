@@ -19,7 +19,6 @@
 /**
  * Allocate a new min heap of the given size.
  * 
- * TODO: 
  *  Allocate memory for the `MinHeap` object, and the 2 arrays inside it.
  *  `numItems` should initially be set to 0, and all the indices should be
  *   set to -1 to start with (since we don't have anything in the heap).
@@ -57,7 +56,7 @@ static void swap(MinHeap *heap, int a, int b) {
 /**
  * Add a value with the given priority into the heap.
  * 
- * TODO: Complete this function, and make sure all the relevant data is updated
+ *      Complete this function, and make sure all the relevant data is updated
  *      correctly, including the `indices` array if you move elements around. 
  *      Make sure the heap property is not violated. 
  * 
@@ -102,7 +101,7 @@ static double doubleMin(double a, double b){//returns the min of two doubles
  *        *priority = 1.0;
  *        return 10;
  * 
- * TODO: Complete this function, and make sure all the relevant data is updated
+ *      Complete this function, and make sure all the relevant data is updated
  *      correctly, including the `indices` array if you move elements around. 
  *      Make sure the heap property is not violated. 
  * 
@@ -149,7 +148,7 @@ int heapExtractMin(MinHeap *heap, double *priority) {
  * NOTE: You will find it helpful here to first get the index of the value
  *       in the heap from the `indices` array.
  * 
- * TODO: Complete this function, and make sure all the relevant data is updated
+ *      Complete this function, and make sure all the relevant data is updated
  *      correctly, including the `indices` array if you move elements around. 
  *      Make sure the heap property is not violated. 
  * 
@@ -185,7 +184,7 @@ int heapSize(MinHeap *heap){
 	return heap->numItems;
 }
 /** 
- * Returns the 
+ * Returns true if heap is empty
 */
 char isHeapEmpty(MinHeap *heap){
 	return heapSize(heap) == 0;

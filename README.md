@@ -1,15 +1,17 @@
 # 1bit file converter
 
+Compression can be lossless or lossy. Lossless compression only differs in implementation, but lossy just means some information is lost. Image file formats like jpg use clever ways to compress file sizes without a huge loss of visual fedelity, but what if you wanted to go further? 1bit is a file type that only stores two colours, 1 and 0. Hence, each pixel is represented with at most 1 bit. This project is for converting different image file types to 1bit, and converting them back. As of last writing this, this project supports various types of dithering, run length encoding, and the ability to change encoding for existing files.
 
-Compression can be lossless or lossy. Lossless compression only differs in implementation, but lossy just means some information is lost. Image file formats like jpg use clever ways to compress file sizes without a huge loss of visual fedelity, but what if you wanted to go further? 
-should work since this project only uses standard c99.
+### Building
+
+Make sure `make` and `gcc` is installed, then run `make`. The executable name is `1bit_converter.exe` regardless of target operating system.
 
 
 ### Converting from your image file type to 1bit
 To convert from a file type, you need to include some flags.
 
 For all 1bit operations, you need to include the flag `-i` followed by an input
- file and and output file. Then to specify you want to create a new 1bit, add
+ file and output file. Then to specify you want to create a new 1bit, add
  the `-c` flag. 
 To specify the type of compression, type `.0` or `.1` after `-c` for no 
 compression and run-length compression respectively. `.2` is in progress.
@@ -40,14 +42,12 @@ You can change from `.0` to `.1` by using the `-u` flag instead of `-c` or `-r`
 
 ### Todo list
 - [ ] Huffman encoding (`.2`)
-- [ ] Huffman encoding
 - [ ] Suport for different colours
 - [ ] Lempel-Zev compression implementaion
-- [ ] DEFALTE (LZ + huffman)
+- [ ] DEFLATE (LZ + huffman)
 - [ ] Different error diffusion dithering algorithms
 - [ ] Converting .1 to .0
-- [x] Change folder names so that it can be compatible with both unix and windows environments
-
+- [ ] Parallelizing where possible
 
 ### Examples
 [![I dithered this image](https://upload.wikimedia.org/wikipedia/commons/c/c1/Michelangelo%27s_David_-_Floyd-Steinberg.png)](https://upload.wikimedia.org/wikipedia/commons/c/c1/Michelangelo%27s_David_-_Floyd-Steinberg.png)

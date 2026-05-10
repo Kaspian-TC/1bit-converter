@@ -1,9 +1,13 @@
 #include "1bit_funcs.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define _INDEX(X,Y,W) ((X) + (Y) * (W))
 /* This code is dedicated to Josh and Lee, but Lee helped more than Josh 
 */
 void freeOneImage(OneImage *om) {
-	if (om->filename != NULL) free(om->filename);
 	if (om->data != NULL) free(om->data);
 	free(om);
 }
@@ -40,144 +44,16 @@ static void assignBit(OneImage* omg, long index,char val){//bit should only be 1
 	return;
 }
 
-static uint8_t correctError(float input_val){//input value
-	if(input_val>255){
-		return 255;
-	}
-	else if(input_val<0){
-		return 0;
-	}
-	return (uint8_t)input_val;
-}
+
 static int pixelSum(Pixel current_pixel){
 	return (int)(current_pixel.R + current_pixel.G + current_pixel.B);
 }
 static double avgRGB(Pixel current_pixel){
 	return (double)pixelSum(current_pixel)/3;
 }
-void imgThreshholdMapDither(Image * img,int * threshhold_map,int x_size,int y_size,int threshhold_range){
-	for(int y = 0; y< img->sy ;y+=y_size){
-		for(int x = 0; x< img->sx ;x+=x_size){
-			for(int i = 0; i<x_size;i++){
-				for(int j = 0; j<y_size;j++){
-					int threshhold = threshhold_map[i+j*x_size];
-					if(x+i < img->sx && y+j < img->sy){
-						Pixel currentPixel = getPixel(img,_INDEX(x+i,y+j,img->sx));
-						if(threshhold_range*pixelSum(currentPixel)>(threshhold+0)*765){// +1 to focus on the darker images 
-							currentPixel = (Pixel) {255,255,255};
-						}
-						else{
-							currentPixel = (Pixel) {0,0,0};
-						}
-						img->data[_INDEX(x+i,y+j,img->sx)] = currentPixel;
-					}
-				}
-			}
-		}
-	}
-	return;
-}
-void imgBayerZero(Image * img){
-	int bayerMatrix[2][2] = 
-	{
-		{0,2},
-		{3,1}
-	};
-	imgThreshholdMapDither(img,bayerMatrix[0],2,2,4);
-	return;
-}
-void imgBayerOne(Image * img){
-	int bayerMatrix[4][4] = 
-	{
-		{0,8,2,10},
-		{12,4,14,6},
-		{3,11,1,9},
-		{15,7,13,5}
-	};
-	imgThreshholdMapDither(img,bayerMatrix[0],4,4,16);
-	return;
-}
-void imgBayerTwo(Image * img){
-	int bayerMatrix[8][8] = 
-	{
-		{0,32,8,40,2,34,10,42},
-		{48,16,56,24,50,18,58,26},
-		{12,44,4,36,14,46,6,38},
-		{60,28,52,20,62,30,54,22},
-		{3,35,11,43,1,33,9,41},
-		{51,19,59,27,49,17,57,25},
-		{15,47,7,39,13,45,5,37},
-		{63,31,55,23,61,29,53,21}
-	};
-	imgThreshholdMapDither(img,bayerMatrix[0],8,8,64);
-	return;
-}
-static void imgDitherHelper(Pixel * pixels,int x,int y,float quant_err_R,float quant_err_G,float quant_err_B,float debt,int width,int height){ // needs to be rewritten a bit but gets the point accross 
-	if(x<width && x>=0 && y<height){
-		int index = _INDEX(x,y,width);
-		Pixel c = pixels[index];
-		float r = (float)c.R;
-		float g = (float)c.G;
-		float b = (float)c.B;
-		r += quant_err_R * debt/16.0; // why are we dividing by 16?
-		g += quant_err_G * debt/16.0;
-		b += quant_err_B * debt/16.0;
-		c.R= correctError(r);
-		c.G= correctError(g);
-		c.B= correctError(b);
-		pixels[index] = c;
-	}
-	return;
-}
 
-void imgErrorDither(Image * img, int factor,int *error_kernel,int *location_positions,int kernelSize){
-	for(int y = 0; y< img->sy ;y++){
-		for(int x = 0; x< img->sx ;x++){
-			
-			Pixel oldpixel = img->data[_INDEX(x,y,img->sx)]; //oldpixel := pixels[x][y]
-			float old_r = oldpixel.R;
-			float old_g = oldpixel.G;
-			float old_b = oldpixel.B;
-			
-			Pixel newpixel; //newpixel�:= find_closest_palette_color(oldpixel)
-			newpixel.R = (uint8_t)round(factor * old_r / 255) * (255/factor);
-			newpixel.G = (uint8_t)round(factor * old_g / 255) * (255/factor);
-			newpixel.B = (uint8_t)round(factor * old_b / 255) * (255/factor);
-			
-			img->data[_INDEX(x,y,img->sx)] = newpixel; //pixels[x][y]�:= newpixel
-			
-			float quant_err_R = old_r-newpixel.R; //quant_error�:= oldpixel - newpixel
-			float quant_err_G = old_g-newpixel.G;
-			float quant_err_B = old_b-newpixel.B;
-			
-			for(int i = 0;i<kernelSize;i++){
-				imgDitherHelper(img->data,
-								x+location_positions[2*i],
-								y+location_positions[2*i+1],
-								quant_err_R,
-								quant_err_G,
-								quant_err_B,
-								error_kernel[i],
-								img->sx,
-								img->sy);
-			}
-		}
-	}
-	return;
-}
-void ditherFloydSteinberg(Image * img, int factor){
-	int error_kernel[4] = {7,3,5,1};
-	int location_positions[4][2] = 
-	{
-		{1,0},{-1,1},{0,1},{1,1}
-	};
-	imgErrorDither(img,factor,error_kernel,location_positions[0],4);
-	return;
-}
 Image * imgGrayscale(Image * img){//returns grayscale of img
 	Image *gray_img = newImage(img->sx,img->sy);
-    gray_img->filename = malloc(strlen(img->filename));
-	strcpy(gray_img->filename,img->filename);
 	uint8_t avgColour;
 	for(long i = 0; i<img->sx * img->sy ;i++){
 		avgColour = avgRGB(getPixel(img,i));
@@ -204,14 +80,6 @@ OneImage* convertImgToOne(Image *img){
 		return (NULL);
 	}
 	OneImage *omg = (OneImage *)calloc(1, sizeof(OneImage));
-	int nameLen = strlen(img->filename);
-	omg->filename = malloc(nameLen+2);
-	strcpy(omg->filename,img->filename);
-	omg->filename[nameLen-3] = '1';
-	omg->filename[nameLen-2] = 'b';
-	omg->filename[nameLen-1] = 'i';
-	omg->filename[nameLen] = 't';
-	omg->filename[nameLen+1] = '\0';
 	omg->data = calloc((size_t)ceil((float)(img->sx * img->sy)/8), sizeof(uint8_t));
 	omg->sx = img->sx;
 	omg->sy = img->sy;
@@ -244,13 +112,6 @@ void averageColourImage(Image* img){
 Image* convertOneToImg(OneImage* omg){
 	if(omg != NULL) {
 		Image *img = (Image *)calloc(1, sizeof(Image));
-		int nameLen = strlen(omg->filename);
-		img->filename = malloc(nameLen+1);
-		strncpy(img->filename,omg->filename,nameLen); //TODO: make this more generalized
-		img->filename[nameLen-4] = 'p';
-		img->filename[nameLen-3] = 'p';
-		img->filename[nameLen-2] = 'm';
-		img->filename[nameLen-1] = '\0';
 		img->data = calloc(omg->sx * omg->sy,sizeof(Pixel));
 		img->sx = omg->sx;
 		img->sy = omg->sy;

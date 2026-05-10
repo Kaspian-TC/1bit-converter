@@ -1,9 +1,11 @@
+#include <stdbool.h>
 #include <stdio.h>
-// #include "imgutils.h"
 #include "1bit_funcs.h" 
+#include "dither_funcs.h"
 #include <string.h> 
 #include "read_write/1bit_read_functions.h"
 #include "read_write/1bit_write_functions.h"
+#include <argp.h>
 
 char * toUpper(char * s){ //changes the string to be uppercase only
 	for(int i = 0; s[i]!='\0';i++){
@@ -13,14 +15,149 @@ char * toUpper(char * s){ //changes the string to be uppercase only
 	}
 	return s;
 }
-unsigned char fileIsReadable(char *filename){// return 1 if valid, 0 otherwise
+bool isFileReadable(char *filename){// return 1 if valid, 0 otherwise
 	FILE *f = fopen(filename, "r");
 	if (f == NULL) {
-		fprintf(stderr,"Unable to open file %s. Check the path.\n",filename);
-		return 0;
+		return false;
 	}
 	fclose(f);
-	return 1;	
+	return true;	
+}
+static int createFile(bool is_dithered,char * input_file, char * dither_type,  char * file_version,char * output_file){
+	Image *img = readImage(input_file);
+	OneImage *omg;
+	if(is_dithered){
+		Image * gray_img = imgGrayscale(img);
+		freeImage(img);
+		img = gray_img; //grayscale the image
+
+		char upper_dither_type[strlen(dither_type)+1];
+		strcpy(upper_dither_type,dither_type);
+		toUpper(upper_dither_type);
+		if(strcmp(upper_dither_type,"FLOYD-STEINBERG")==0){ //check what form of dithering it uses
+			ditherFloydSteinberg(img,1);
+		}
+		else if(strcmp(upper_dither_type,"ATKINSON")==0){ 
+			ditherAtkinson(img,1);
+		}
+		else if(strcmp(upper_dither_type,"JARVIS-JUDICE-NINKE")==0 || strcmp(upper_dither_type,"JJN")==0){ 
+			ditherJarvisJudiceNinke(img,1);
+		}
+		else if(strcmp(upper_dither_type,"BAYER-0")==0){
+			imgBayerZero(img);
+		}
+		else if(strcmp(upper_dither_type,"BAYER-1")==0){
+			imgBayerOne(img);
+		}
+		else if(strcmp(upper_dither_type,"BAYER-2")==0){
+			imgBayerTwo(img);
+		}
+		else if(strcmp(upper_dither_type, "RANDOM")==0){
+			randomDither(img);
+		}
+		else{ // error, end program
+			fprintf(stderr,"invalid dithering type specified\n");
+			freeImage(img);
+			return 1;
+		}
+	}
+	else{
+		averageColourImage(img);
+	}
+	omg = convertImgToOne(img); //threshhold dithers without avg
+	
+	if(file_version != NULL){
+		oneBitWrite(omg, output_file,file_version);
+	}
+	else{
+		oneBitOutput(omg, output_file);
+	}
+	freeOneImage(omg);
+	freeImage(img);
+	return 0;
+	 
+}
+
+struct arguments
+{
+	char * input_file,* output_file, *dither_type,* file_version;
+	char field;
+	bool is_dithered;
+};
+static int parse_opt(int key, char * arg, struct argp_state *state){
+	struct arguments * arguments = state->input;
+	switch (key) {
+	case 'c':
+		{
+			if (arguments->field != 0){
+				argp_failure(state, 1, 0, "another flag has been set before create");
+				break;
+			}
+
+			arguments->field = 'c';
+			if (arg == NULL){
+				arguments->file_version = ".0";
+			}
+			else{
+				arguments->file_version = arg;
+			}
+		}
+		break;
+	case 'u':
+		{
+			if (arguments->field != 0){
+				argp_failure(state, 1, 0, "another flag has been set before upgrade");
+				break;
+			}
+			arguments->field = 'u';
+			if (arg == NULL){
+				arguments->file_version = ".0";
+			}
+			else{
+				arguments->file_version = arg;
+			}
+		}
+		break;
+	case 'd':
+		{
+			arguments->is_dithered = true;
+			arguments->dither_type = arg;
+		}
+		break;
+	case 'r':
+		{
+			if (arguments->field != 0){
+				argp_failure(state, 1, 0, "another flag has been set before read");
+				break;
+			}
+			arguments->field = 'r';
+		}
+		break;
+	case ARGP_KEY_ARG:
+		{
+			if (arguments->input_file == NULL){
+				arguments->input_file = arg;
+			}
+			else if (arguments->output_file == NULL){
+				arguments->output_file = arg;
+			}
+		}
+		break;
+    case ARGP_KEY_END:
+        {
+			if (!arguments->input_file){
+				argp_failure(state, 1, 0, "did not include input file");
+			}
+			if (!arguments->output_file){
+				argp_failure(state, 1, 0, "did not include output file");
+			}
+			if (arguments->field == 0){
+				argp_failure(state, 1, 0, "too few flags have been passed");
+			}
+        }
+        break;
+	}
+	return 0;
 }
 int main(int argc, char** argv){
 	/* -r : read flag
@@ -35,99 +172,51 @@ int main(int argc, char** argv){
 	bool is_read = 0;
 	bool is_create = 0;
 	bool is_upgrade = 0;
-	bool is_dithered = 0;
 	
-	char * dither_type;
-	char * input_file;
-	char * output_file;
-	char * file_version = NULL;
-	for(int i = 1;i<argc;i++){
-		if(strcmp(argv[i],"-r")==0){
-			is_read=1;
-		}
-		else if(strcmp(argv[i],"-c")==0){
-			is_create=1;
-			file_version = argv[i+1];
-		}
-		else if(strcmp(argv[i],"-u")==0){
-			is_upgrade = 1;
-			file_version = argv[i+1];
-		}
-		else if(strcmp(argv[i],"-d")==0){
-			is_dithered = 1;
-			dither_type = argv[i+1];
-		}
-		else if(strcmp(argv[i],"-i")==0 && i+2<argc){
-			input_file = argv[i+1];
-			output_file = argv[i+2];
-		}
+	struct argp_option options[] =
+	{
+		{ "read", 'r',0,0,"Create an image file from a 1bit file"},
+		{ "create", 'c',"VERSION",OPTION_ARG_OPTIONAL,"Create a 1bit file from another image file type"},
+		{ "upgrade", 'u',"VERSION",OPTION_ARG_OPTIONAL,"Create a file with a different level of compression"},
+		{ "dither", 'd',"DITHERTYPE",0,"Select a dithering algorithm"},
+		{0}
+	};
+	struct arguments arguments = {0};
+	struct argp argp = {options,parse_opt,"INPUTFILE OUTPUTFILE"};
+	int argp_error = argp_parse(&argp, argc, argv, 0, 0, &arguments);
+	if (argp_error != 0){
+		return argp_error;
 	}
+	is_read = arguments.field == 'r';
+	is_create = arguments.field == 'c';
+	is_upgrade = arguments.field == 'u';
 	
-	if(is_read + is_create + is_upgrade != 1){
-		fprintf(stderr,"must include -r,-c, or -u (but only one)\n");
-		return 1;
-	}
-	if(!(fileIsReadable(input_file))){
-		fprintf(stderr,"input file path invalid or doesn't exist\n");
+	if(!(isFileReadable(arguments.input_file))){
+		fprintf(stderr,"Unable to open file %s. Check the path.\n",arguments.input_file);
 		return 1;
 	}
 	
 	if(is_create){
-		Image *img = readImage(input_file);
-		OneImage *omg;
-		if(is_dithered){
-			Image * gray_img = imgGrayscale(img);
-			freeImage(img);
-			img = gray_img; //grayscale the image
-
-			char upper_dither_type[strlen(dither_type)+1];
-			strcpy(upper_dither_type,dither_type);
-			toUpper(upper_dither_type);
-			if(strcmp(upper_dither_type,"FLOYD-STEINBERG")==0){ //check what form of dithering it uses
-				ditherFloydSteinberg(img,1);
-			}
-			else if(strcmp(upper_dither_type,"BAYER-0")==0){
-				imgBayerZero(img);
-			}
-			else if(strcmp(upper_dither_type,"BAYER-1")==0){
-				imgBayerOne(img);
-			}
-			else if(strcmp(upper_dither_type,"BAYER-2")==0){
-				imgBayerTwo(img);
-			}
-			else{ // error, end program
-				fprintf(stderr,"invalid dithering type specified\n");
-				freeImage(img);
-				return 1;
-			}
+		int is_error = createFile(
+				arguments.is_dithered,
+				arguments.input_file,
+				arguments.dither_type,
+				arguments.file_version,
+				arguments.output_file);
+		if (is_error == 1){
+			return 1;
 		}
-		else{
-			averageColourImage(img);
-		}
-		omg = convertImgToOne(img); //threshhold dithers without avg
-		
-		if(file_version != NULL){
-			oneBitWrite(omg, output_file,file_version);
-		}
-		else{
-			oneBitOutput(omg, output_file);
-		}
-		freeOneImage(omg);
-		freeImage(img);
 	}
 	else if(is_read){
-		OneImage * omg = read1bitimage(input_file);
+		OneImage * omg = read1bitimage(arguments.input_file);
 		Image *img2 = convertOneToImg(omg);
-		writeImage(img2, output_file);
+		writeImage(img2, arguments.output_file);
 		freeOneImage(omg);
 		freeImage(img2);
 	}
 	else if(is_upgrade){ // filename filename_2 upgrade type
-		if(file_version == NULL){
-			file_version = ".0";
-		}
-		OneImage * omg = read1bitimage(input_file);
-		oneBitWrite(omg, output_file,file_version);
+		OneImage * omg = read1bitimage(arguments.input_file);
+		oneBitWrite(omg, arguments.output_file,arguments.file_version);
 		freeOneImage(omg);
 	}
 	else{

@@ -1,0 +1,3 @@
+[submodule "read_write/stb"]
+	path = read_write/stb
+	url = https://github.com/nothings/stb

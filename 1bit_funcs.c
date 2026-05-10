@@ -8,7 +8,6 @@
 /* This code is dedicated to Josh and Lee, but Lee helped more than Josh 
 */
 void freeOneImage(OneImage *om) {
-	if (om->filename != NULL) free(om->filename);
 	if (om->data != NULL) free(om->data);
 	free(om);
 }
@@ -55,8 +54,6 @@ static double avgRGB(Pixel current_pixel){
 
 Image * imgGrayscale(Image * img){//returns grayscale of img
 	Image *gray_img = newImage(img->sx,img->sy);
-    gray_img->filename = malloc(strlen(img->filename));
-	strcpy(gray_img->filename,img->filename);
 	uint8_t avgColour;
 	for(long i = 0; i<img->sx * img->sy ;i++){
 		avgColour = avgRGB(getPixel(img,i));
@@ -83,14 +80,6 @@ OneImage* convertImgToOne(Image *img){
 		return (NULL);
 	}
 	OneImage *omg = (OneImage *)calloc(1, sizeof(OneImage));
-	int nameLen = strlen(img->filename);
-	omg->filename = malloc(nameLen+2);
-	strcpy(omg->filename,img->filename);
-	omg->filename[nameLen-3] = '1';
-	omg->filename[nameLen-2] = 'b';
-	omg->filename[nameLen-1] = 'i';
-	omg->filename[nameLen] = 't';
-	omg->filename[nameLen+1] = '\0';
 	omg->data = calloc((size_t)ceil((float)(img->sx * img->sy)/8), sizeof(uint8_t));
 	omg->sx = img->sx;
 	omg->sy = img->sy;
@@ -123,13 +112,6 @@ void averageColourImage(Image* img){
 Image* convertOneToImg(OneImage* omg){
 	if(omg != NULL) {
 		Image *img = (Image *)calloc(1, sizeof(Image));
-		int nameLen = strlen(omg->filename);
-		img->filename = malloc(nameLen+1);
-		strncpy(img->filename,omg->filename,nameLen); //TODO: make this more generalized
-		img->filename[nameLen-4] = 'p';
-		img->filename[nameLen-3] = 'p';
-		img->filename[nameLen-2] = 'm';
-		img->filename[nameLen-1] = '\0';
 		img->data = calloc(omg->sx * omg->sy,sizeof(Pixel));
 		img->sx = omg->sx;
 		img->sy = omg->sy;

@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-int getOneImageByteLength(OneImage *omg){
-  return (int)ceil((float)(omg->sx* omg->sy)/8);
+size_t getOneImageByteLength(OneImage *omg){
+  return (size_t)ceil((float)(omg->sx* omg->sy)/8);
 }
 Pixel getPixel(Image *img, int pixIdx) {
   return img->data[pixIdx];
@@ -35,6 +35,5 @@ char *basename(char *path) {
 }
 void freeImage(Image *im) {
   if (im) free(im->data);
-  if (im->filename != NULL) free(im->filename);
   free(im);
 }

@@ -20,24 +20,23 @@ static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	}
 	return;
 }*/
-static uint8_t* runLengthEncode(const uint8_t* data,int x_size,int y_size,long* size){ //encodes the data with run length encoding
+static uint8_t* runLengthEncode(const uint8_t* data,size_t length ,size_t* size){ //encodes the data with run length encoding
 	//if there is negative compression, makes new_data identical to data
 	/*aaaabbbbcdddddee will become aa4bb4cdd5ee2 unless there is negative compression in which case it will exit with NULL*/
-	int length = ceil((float)(x_size* y_size)/8);
-	uint8_t* new_data = calloc((size_t)length, sizeof(uint8_t));
+	uint8_t* encoded_data = calloc(length, sizeof(uint8_t));
 	if(data == NULL){
-		return new_data;
+		return encoded_data;
 	}
 	if(length==1){//edge case
-		new_data[0] = data[0];
+		encoded_data[0] = data[0];
 	}
 	long i = 1;
 	uint8_t prev_byte;
 	uint8_t current_byte= data[0];
 	char is_run = 0; //0 false, 1 true
 	uint8_t run_length;
-	long new_i=0;
-	while(i<length && new_i!=length-1){
+	long encoded_i=0;
+	while(i<length && encoded_i!=length-1){
 		prev_byte = current_byte;
 		current_byte = data[i];
 		
@@ -45,9 +44,9 @@ static uint8_t* runLengthEncode(const uint8_t* data,int x_size,int y_size,long* 
 			if(is_run){
 				if(run_length==255){ //max value, write to new_data
 					//IF THE VALUE IS 255, THE NEXT 2 BYTEs IN new_data WILL BE of current_byte and the run will start at 1
-					new_data[new_i++]=run_length;//assign 255
-					new_data[new_i++]=current_byte;//assign two bytes
-					new_data[new_i++]=current_byte;
+					encoded_data[encoded_i++]=run_length;//assign 255
+					encoded_data[encoded_i++]=current_byte;//assign two bytes
+					encoded_data[encoded_i++]=current_byte;
 					run_length=0; 
 				}
 				run_length++;
@@ -55,37 +54,37 @@ static uint8_t* runLengthEncode(const uint8_t* data,int x_size,int y_size,long* 
 			else{ // start run
 				run_length = 2;
 				is_run = 1;
-				new_data[new_i++]=prev_byte;
-				new_data[new_i++]=current_byte;//assign byte
+				encoded_data[encoded_i++]=prev_byte;
+				encoded_data[encoded_i++]=current_byte;//assign byte
 			}
 		}
 		else{
 			if(is_run){
 				is_run = 0;
-				new_data[new_i]=run_length; //assign run length
-				new_i++;
+				encoded_data[encoded_i]=run_length; //assign run length
+				encoded_i++;
 			}
 			else{ //normal assign
-				new_data[new_i]=prev_byte;//assign byte
-				new_i++;
+				encoded_data[encoded_i]=prev_byte;//assign byte
+				encoded_i++;
 			}
 		}
 		i++;
 	}
 	if(is_run){
 		is_run = 0;
-		new_data[new_i]=run_length; //assign run length
-		new_i++;
+		encoded_data[encoded_i]=run_length; //assign run length
+		encoded_i++;
 	}
 	// printf("%ld %ld\n",i,new_i);
-	if(new_i>=length-1){
-		copyData(new_data,data,length);
+	if(encoded_i>=length-1){
+		copyData(encoded_data,data,length);
 		*size = length;
 		
-		return new_data;
+		return encoded_data;
 	}
-	*size = new_i;
-	return new_data;
+	*size = encoded_i;
+	return encoded_data;
 }
 
 void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit file format
@@ -109,18 +108,20 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 		 sizeof(uint8_t), f);
 	  }
 	  else if(strcmp(type,".1")==0){
-		uint8_t *data;
-		long size;
-		size = 0;
-		data = runLengthEncode(omg->data,omg->sx,omg->sy,&size);
-		fwrite(data, (size_t)size, sizeof(uint8_t), f);
-		if(size>=ceil((float)(omg->sx* omg->sy)/8)){
+		uint8_t *runlength_encoded_data;
+		size_t new_size;
+		new_size = 0;
+		size_t omg_length = getOneImageByteLength(omg);
+		runlength_encoded_data = runLengthEncode(omg->data,omg_length,&new_size);
+		fwrite(runlength_encoded_data, (size_t)new_size, sizeof(uint8_t), f);
+
+		if(new_size>= omg_length){
 			fprintf(stderr, "encoding resulted in negative compression, will"
 			" now regularly write\n");
 			rewind(f);
 			fprintf(f, "1bit.0\n");
 		}
-		free(data);
+		free(runlength_encoded_data);
 	  }
 	  else if (strcmp(type,".2")==0) // huffman encoding
 	  {

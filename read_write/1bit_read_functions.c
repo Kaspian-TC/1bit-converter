@@ -76,10 +76,6 @@ OneImage *read1bitimage(char *filename) {
 		fprintf(stderr,"Unable to open file %s in read1bitimage. Check the path.\n",filename);
 		exit(1);
 	}
-	char *shortend_filename = basename(filename); 
-	omg->filename = malloc(strlen(shortend_filename)+1);
-	strcpy(omg->filename,shortend_filename);
-
 	buffer_output = fgets(buffer, 1024, f);//Read and check header
 	if (strcmp(buffer, "1bit\n") == 0 || strcmp(buffer, "1bit.0\n") == 0 ) {
 		onebit_type = 0;
@@ -128,17 +124,12 @@ Image *readImage(char *filename){ // returns the Image type
     
     img->data = NULL;
 	
-	char *shortend_filename = basename(filename); //takes the 
-    img->filename = malloc(strlen(shortend_filename));
-	strcpy(img->filename,shortend_filename);
-    
 	int width, height, bpp, file_is_readable;
 	
     file_is_readable = stbi_info(filename, &width, &height, &bpp);
 	
 	if(!file_is_readable){
 		fprintf(stderr, "File type not supported\n");
-		free(img->filename);
 		free(img);
 		exit(1);
 	}
@@ -153,7 +144,6 @@ Image *readImage(char *filename){ // returns the Image type
     
     if (rgb_image_data == NULL) {
 		fprintf(stderr, "Out of memory allocating space for image\n");
-		free(img->filename);
 		free(img);
 		exit(1);
     }

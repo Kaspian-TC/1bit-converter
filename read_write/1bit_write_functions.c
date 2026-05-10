@@ -36,6 +36,7 @@ static uint8_t* runLengthEncode(const uint8_t* data,size_t length ,size_t* size)
 	char is_run = 0; //0 false, 1 true
 	uint8_t run_length;
 	long encoded_i=0;
+	// TODO figure out strange while condition
 	while(i<length && encoded_i!=length-1){
 		prev_byte = current_byte;
 		current_byte = data[i];

@@ -33,20 +33,15 @@ static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start a
 	uint8_t current_byte;
 	uint8_t prev_byte;
 	long d_index = 0;
-	long f_index = 0;
 	current_byte = (uint8_t)fgetc(f);
-	f_index++;
 	do{ //stops loop when at eof
 		prev_byte = current_byte;
 		current_byte = (uint8_t)fgetc(f);
-		f_index++;
 		if(current_byte == prev_byte){ //there is a run
 			uint8_t run_length = (uint8_t)fgetc(f);
-			f_index++;
 			assignValues(data,d_index,run_length,length,current_byte);
 			d_index+=run_length;
 			current_byte =(uint8_t)fgetc(f);
-			f_index++;
 		}
 		else{
 			data[d_index] = prev_byte;

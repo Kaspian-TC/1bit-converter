@@ -1,5 +1,9 @@
 // #include "1bit_funcs.h"
 #include "1bit_read_functions.h"
+#include "huffman.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
@@ -83,6 +87,9 @@ OneImage *read1bitimage(char *filename) {
 	else if (strcmp(buffer, "1bit.1\n") == 0) {
 		onebit_type = 1;
 	}
+	else if (strcmp(buffer, "1bit.1\n") == 0) {
+		onebit_type = 2;
+	}
 	else{
 		fprintf(stderr, "%s: Wrong file format, not a .1bit file.\n", filename);
 		exit(1);
@@ -111,6 +118,9 @@ OneImage *read1bitimage(char *filename) {
 	}
 	else if(onebit_type == 1){
 		bytes_read = runLengthDecode(omg->data,f,ceil((float)(omg->sx* omg->sy)/8));
+	}
+	else if(onebit_type == 2){
+		bytes_read = huffmanDecode(omg->data,f, getOneImageByteLength(omg));
 	}
 	
 	fclose(f);

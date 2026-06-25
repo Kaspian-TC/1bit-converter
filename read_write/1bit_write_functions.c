@@ -1,12 +1,17 @@
 #include "1bit_write_functions.h"
 #include "huffman.h"
 #include <math.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#define CONVERT_TO_BYTES(X) (ceil(X/8.0))
+
 #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h" //this should only be included here since this is the WRITE file
 #endif
+#define DEBUG
 
 static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	for(int i = 0;i<length;i++){
@@ -14,6 +19,9 @@ static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	}
 	return;
 }
+//static size_t CONVERT_TO_BYTES(size_t bits){
+//	return ceil(bits/8.0);
+//}
 static void printBinary(uint8_t number){
 	for(int i = 7;i>=0;i--){
 		printf("%d",number>>i & 1);
@@ -94,6 +102,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 	strcmp(type,".1")==0 || strcmp(type,".2")==0)
 	){
 		fprintf(stderr, "oneBitWrite(): wrong type\n");
+		return;
 	}
     if (omg->data != NULL) {
       FILE *f = fopen(filename, "wb+");
@@ -105,7 +114,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
       fprintf(f, "1bit%s\n",type);
       fprintf(f, "%d %d\n", omg->sx, omg->sy);
 	  if(strcmp(type,"")==0|| strcmp(type,".0")==0){
-		fwrite(omg->data, (size_t)ceil((float)(omg->sx* omg->sy)/8),
+		fwrite(omg->data, getOneImageByteLength(omg),
 		 sizeof(uint8_t), f);
 	  }
 	  else if(strcmp(type,".1")==0){
@@ -127,8 +136,9 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 	  else if (strcmp(type,".2")==0) // huffman encoding
 	  {
 		uint8_t *data;
-		long size;
-		size = 0;
+		long size_bits;
+		size_bits = 0;
+
 		#ifdef DEBUG
 		const char *inputString = "A_DEAD_DAD_CEDED_A_BAD_BABE_A_BEADED_ABACA_BED";
 		uint8_t byteArray [strlen(inputString)];
@@ -136,16 +146,16 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 			byteArray[i] = (uint8_t) inputString[i];
 		}
 		#endif
-		data = huffmanEncode(omg->data,ceil((float)(omg->sx* omg->sy)/8),
-		&size);
-		for(int i = 0;i<size/8+1;i++){
+		//data = huffmanEncode(omg->data,ceil((float)(omg->sx* omg->sy)/8),
+		data = huffmanEncode(byteArray,strlen(inputString),
+		&size_bits);
+		/*for(int i = 0;i<CONVERT_TO_BYTES(size_bits);i++){
 			printBinary(data[i]);
-			// printf("%d ",data[i]);
-		}
+		}*/
 		//in .2 it will first list the total size as to not cause confusion
-		fprintf(f, "%ld\n", size);
-		fwrite(data, (size_t)(size), sizeof(uint8_t), f);
-		if((size/8+1)>=ceil((float)(omg->sx* omg->sy)/8)){
+		fprintf(f, "%ld\n", size_bits);
+		fwrite(data, CONVERT_TO_BYTES(size_bits), sizeof(uint8_t), f);
+		if(CONVERT_TO_BYTES(size_bits)>= getOneImageByteLength(omg)){
 			fprintf(stderr, "encoding resulted in negative compression, will"
 			" now regularly write\n");
 			rewind(f);

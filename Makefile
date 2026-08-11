@@ -19,7 +19,7 @@ $(EXE_NAME): $(OBJS)
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-release: CFLAGS +=-O3
+release: CFLAGS +=-Os -s
 release: $(EXE_NAME)
 
 INPUT_PPM = david

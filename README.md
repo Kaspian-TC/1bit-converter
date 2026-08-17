@@ -1,6 +1,6 @@
 # 1bit file converter
 
-Compression can be lossless or lossy. Lossless compression only differs in implementation, but lossy just means some information is lost. Image file formats like jpg use clever ways to compress file sizes without a huge loss of visual fedelity, but what if you wanted to go further? 1bit is a file type that only stores two colours, 1 and 0. Hence, each pixel is represented with at most 1 bit. This project is for converting different image file types to 1bit, and converting them back. As of last writing this, this project supports various types of dithering, run length encoding, and the ability to change encoding for existing files.
+Compression can be lossless or lossy. Lossless compression only differs in implementation, but lossy just means some information is lost. Image file formats like jpg use clever ways to compress file sizes without a huge loss of visual fidelity, but what if you wanted to go further? 1bit is a file type that only stores two colours, 1 and 0. Hence, each pixel is represented with at most 1 bit. This project is for converting different image file types to 1bit, and converting them back. As of last writing this, this project supports various types of dithering, run length encoding, and the ability to change encoding for existing files.
 
 ### Building
 
@@ -43,7 +43,7 @@ You can change from `.0` to `.1` by using the `-u` flag instead of `-c` or `-r`
 ### Todo list
 - [ ] Huffman encoding (`.2`)
 - [ ] Suport for different colours
-- [ ] Lempel-Zev compression implementaion
+- [ ] Lempel-Zev compression implementation
 - [ ] DEFLATE (LZ + huffman)
 - [ ] Different error diffusion dithering algorithms
 - [ ] Converting .1 to .0

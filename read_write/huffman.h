@@ -8,5 +8,5 @@
 */
 
 uint8_t* huffmanEncode(const uint8_t* data,int byte_length,long* size);
-size_t huffmanDecode(uint8_t *data,FILE *f,size_t length);
+size_t huffmanDecode(uint8_t *data,FILE *f,long length);
 #endif // HUFFMAN_H

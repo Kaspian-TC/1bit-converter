@@ -1,16 +1,22 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include "../data_types/minheap.h"
 #include "huffman.h"
 #include "../data_types/bitrun.h"
+
+typedef uint16_t headid_type;
+
 typedef struct leaf
 {
 	int id;
 	uint16_t priority;
 	int left_id,right_id;
 }TreeNode;
+static const int heap_size = 256;
 #define DEBUG
 #ifdef DEBUG
 static void printBinary(uint16_t number){
@@ -34,7 +40,7 @@ static void printLeaf(TreeNode leaf){
 
 	return;
 }
-static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
+static void printTree(TreeNode* combined_leaves,int size,uint16_t head_id,int depth){
 	if(head_id < size){ //one of the leaf nodes
 		printf("leaf: %c\n",head_id);
 		return;
@@ -69,7 +75,7 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
  * @param current_run 
  */
 static void assignEncodedBits(Bitrun * encoded_bits[],
-			const TreeNode* combined_leaves, const int combined_leaves_size, const int head_id,
+			const TreeNode* combined_leaves, const int combined_leaves_size, const uint16_t head_id,
 			const Bitrun * current_run,int depth){
 	if(head_id < combined_leaves_size){ //one of the leaf nodes
 		assert(encoded_bits[head_id] == NULL);
@@ -185,7 +191,7 @@ static int assignTreeNodes(TreeNode * tree,MinHeap * min_heap,
 		
 		heapPush(min_heap,new_leaf.id,new_leaf.priority);
 	}
-	int head_id = heapExtractMin(min_heap,head_priority);
+	uint16_t head_id = heapExtractMin(min_heap,head_priority);
 	return head_id;
 }
 uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
@@ -209,7 +215,6 @@ uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
 }
 uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bits){
 	// Make heap_size = 256 because that is the max amount of possible values
-	const int heap_size = 256;
 	// needs to be 2*heap_size because of the extra nodes that are created
 	MinHeap * min_heap = createNewHuffmanHeap(heap_size*2,data,data_length);
 	if(min_heap == NULL){
@@ -219,7 +224,7 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	}
 	TreeNode tree[heap_size];
 	double head_priority;
-	uint16_t head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
+	headid_type head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
 	freeHeap(min_heap); //shouldn't be required after
 
 	// If uint256_t existed in c99, then this would be much better
@@ -264,12 +269,14 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	}
 
 	// stick all the data together
-
+	// head_id + tree + compressed_data
+	
 	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size);
 	*size_bits = (long)(sizeof(head_id)*8 + tree_size*8 + compress_data_bitlength);
 	uint8_t* output_data = malloc(ceil(*size_bits/8.0));
 	printf("%d\n",head_id);
 	memcpy(output_data,&head_id,sizeof(head_id));
+	printf("%d\n",output_data[0]);
 	//longer names matter when mistakes cost the difference 
 	// wtf did I mean by that
 
@@ -281,7 +288,31 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	
 	return output_data;
 }
-size_t huffmanDecode(uint8_t *data,FILE *f,size_t length){
+size_t huffmanDecode(uint8_t *data,FILE *f,long size_bits){
+	if(size_bits ==0){
+		return 0;
+	}
+	// get size_bits
+	const size_t max_tree_size = sizeof(TreeNode)*heap_size;
+	char buffer[max_tree_size+sizeof(headid_type)];
+	char * buffer_output = fgets(buffer, max_tree_size+sizeof(headid_type), f); 
+	if(buffer_output == NULL){
+		fprintf(stderr, "Error reading file in huffmanDecode\n");
+		exit(1);
+	}
+	// get the head_id
+	headid_type head_id;
+	memcpy(&head_id, buffer, sizeof(head_id));
+	printf("read in head_id: %d\n",head_id);
+	// calculate tree_size 
+	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size);
+	
+	// read the tree 
+	TreeNode tree[heap_size];
+	memcpy(tree, buffer+sizeof(headid_type), tree_size);
+	printTree(tree, heap_size, head_id, 0);
+
+	//read the compressed_data (read all data in)
 	return 0;
 }
 

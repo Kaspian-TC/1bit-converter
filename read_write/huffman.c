@@ -271,7 +271,7 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	// stick all the data together
 	// head_id + tree + compressed_data
 	
-	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size);
+	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
 	*size_bits = (long)(sizeof(head_id)*8 + tree_size*8 + compress_data_bitlength);
 	uint8_t* output_data = malloc(ceil(*size_bits/8.0));
 	printf("%d\n",head_id);
@@ -292,24 +292,28 @@ size_t huffmanDecode(uint8_t *data,FILE *f,long size_bits){
 	if(size_bits ==0){
 		return 0;
 	}
-	// get size_bits
 	const size_t max_tree_size = sizeof(TreeNode)*heap_size;
+
+	// get the head_id
 	char buffer[max_tree_size+sizeof(headid_type)];
-	char * buffer_output = fgets(buffer, max_tree_size+sizeof(headid_type), f); 
-	if(buffer_output == NULL){
-		fprintf(stderr, "Error reading file in huffmanDecode\n");
+	
+	headid_type head_id;
+	if (fread(&head_id, sizeof(head_id), 1,f)==0){
+		fprintf(stderr, "Error reading head_id in huffmanDecode\n");
 		exit(1);
 	}
-	// get the head_id
-	headid_type head_id;
-	memcpy(&head_id, buffer, sizeof(head_id));
 	printf("read in head_id: %d\n",head_id);
+
 	// calculate tree_size 
-	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size);
+	//const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
+	//printf("read in tree_size: %ld\n",tree_size);
 	
 	// read the tree 
 	TreeNode tree[heap_size];
-	memcpy(tree, buffer+sizeof(headid_type), tree_size);
+	if (fread(tree, sizeof(TreeNode), head_id-heap_size + 1,f)==0){
+		fprintf(stderr, "Error reading head_id in huffmanDecode\n");
+		exit(1);
+	}
 	printTree(tree, heap_size, head_id, 0);
 
 	//read the compressed_data (read all data in)

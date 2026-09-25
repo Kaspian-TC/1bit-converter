@@ -23,7 +23,7 @@ static char assignValues(uint8_t *data,const long pos_1,const int amount, const 
 	return 1;
 }
 
-static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start at the 
+static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start at the being of the data
 	if(length ==0){
 		return 0;
 	}
@@ -125,6 +125,9 @@ OneImage *read1bitimage(char *filename) {
 		}
 		sscanf(buffer, "%ld\n",&size_bits);
 		bytes_read = huffmanDecode(omg->data,file, size_bits);
+		for (long i = 0; i < bytes_read; i++){
+			printf("%c",omg->data[i]);
+		}
 	}
 	
 	fclose(file);

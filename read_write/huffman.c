@@ -83,7 +83,7 @@ static void assignEncodedBits(Bitrun * encoded_bits[],
 		return;
 	}
 	// Find the left and right then recurse, make sure to bit shift and add 1 
-	// if right, 0 if left 1
+	// if right, 1 if left 0
 	TreeNode head = combined_leaves[head_id-combined_leaves_size];
 	//  Call left child
 	//bit shift left
@@ -258,8 +258,9 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	for (size_t i = 0; i < ceil(compress_data_bitlength/8.0); i++){
 		printBinary_8(compressed_data[i]);
 	}
-	printf("\n");
+	printf("\n%ld\n",compress_data_bitlength);
 #endif /* ifdef DEBUG */
+	
 	
 	//free all bitruns 
 	for(int i = 0;i<heap_size;i++){
@@ -288,14 +289,35 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	
 	return output_data;
 }
+static long uncompressHuffmanData(TreeNode * tree, headid_type head_id, 
+		uint8_t * compressed_data, long compress_data_bitlength,
+		uint8_t * data){
+	headid_type current_node = head_id;
+	long data_index = 0;
+	for (long i = 0; i < compress_data_bitlength; i++){
+		bool bit = compressed_data[i/8] >> (7-i%8) & 1;
+		if (bit){ // 1, right 
+			current_node = tree[current_node-heap_size].right_id;
+		}
+		else{// 0, left
+			current_node = tree[current_node-heap_size].left_id;
+		}
+		if (current_node < heap_size){
+			data[data_index++] = current_node;
+			current_node = head_id;
+		}
+	}
+	return data_index;
+}
 size_t huffmanDecode(uint8_t *data,FILE *f,long size_bits){
+
 	if(size_bits ==0){
 		return 0;
 	}
 	const size_t max_tree_size = sizeof(TreeNode)*heap_size;
 
 	// get the head_id
-	char buffer[max_tree_size+sizeof(headid_type)];
+	//char buffer[max_tree_size+sizeof(headid_type)];
 	
 	headid_type head_id;
 	if (fread(&head_id, sizeof(head_id), 1,f)==0){
@@ -305,7 +327,7 @@ size_t huffmanDecode(uint8_t *data,FILE *f,long size_bits){
 	printf("read in head_id: %d\n",head_id);
 
 	// calculate tree_size 
-	//const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
+	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
 	//printf("read in tree_size: %ld\n",tree_size);
 	
 	// read the tree 
@@ -315,8 +337,26 @@ size_t huffmanDecode(uint8_t *data,FILE *f,long size_bits){
 		exit(1);
 	}
 	printTree(tree, heap_size, head_id, 0);
-
+	
+	// compute compress_data_bitlength
+	long compres_data_bitlength = size_bits - sizeof(head_id)*8 - tree_size*8;
+	//allocate space to read in compressed data
+	uint8_t * compressed_data = malloc(ceil(compres_data_bitlength/8.0));
 	//read the compressed_data (read all data in)
-	return 0;
+	if (fread(compressed_data,sizeof(uint8_t),ceil(compres_data_bitlength/8.0),f) == 0){
+		fprintf(stderr, "Error reading compressed_data in huffmanDecode\n");
+		exit(1);
+	}
+#ifdef DEBUG
+	printf("Print compressed_data: ");
+	for (size_t i = 0; i < ceil(compres_data_bitlength/8.0); i++){
+		printBinary_8(compressed_data[i]);
+	}
+	printf("\n%ld\n",compres_data_bitlength);
+#endif /* ifdef DEBUG */
+	//uncompress compressed_data
+	long bytes_read = uncompressHuffmanData(tree, head_id, compressed_data, compres_data_bitlength, data);
+	
+	return bytes_read;
 }
 

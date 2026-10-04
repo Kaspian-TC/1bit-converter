@@ -19,12 +19,6 @@ typedef struct leaf
 static const int heap_size = 256;
 #define DEBUG
 #ifdef DEBUG
-static void printBinary(uint16_t number){
-	for(int i = 15;i>=0;i--){
-		printf("%d",number>>i & 1);
-	}
-	return;
-}
 static void printBinary_8(uint8_t number){
 	for(int i = 7;i>=0;i--){
 		printf("%d",number>>i & 1);
@@ -35,9 +29,6 @@ static void printLeaf(TreeNode leaf){
 	printf("id: %d\n",leaf.id);
 	printf("priority: %d\n",leaf.priority);
 	printf("children: left: %d right: %d\n",leaf.left_id,leaf.right_id);
-	//printf("child_priorities: left: %d right:%d\n",leaf.left_priority,
-	//leaf.right_priority);
-
 	return;
 }
 static void printTree(TreeNode* combined_leaves,int size,uint16_t head_id,int depth){
@@ -312,8 +303,6 @@ static long uncompressHuffmanData(TreeNode * tree, headid_type head_id,
 	return data_index;
 }
 size_t huffmanDecode(uint8_t *data,FILE *f){
-
-	const size_t max_tree_size = sizeof(TreeNode)*heap_size;
 
 	// get size_bits 
 	long size_bits;

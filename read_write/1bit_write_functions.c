@@ -146,16 +146,11 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 			byteArray[i] = (uint8_t) inputString[i];
 		}
 		#endif
-		//data = huffmanEncode(omg->data,ceil((float)(omg->sx* omg->sy)/8),
-		data = huffmanEncode(byteArray,strlen(inputString),
-		&size_bits);
-		/*for(int i = 0;i<CONVERT_TO_BYTES(size_bits);i++){
-			printBinary(data[i]);
-		}*/
+		data = huffmanEncode(omg->data,getOneImageByteLength(omg), &size_bits);
 		//in .2 it will first list the total size as to not cause confusion
 		//fprintf(f, "%ld\n", size_bits);
 		fwrite(data, CONVERT_TO_BYTES(size_bits) + sizeof(size_bits), sizeof(uint8_t), f);
-		if(CONVERT_TO_BYTES(size_bits)+ sizeof(size_bits)>= getOneImageByteLength(omg)){
+		if(CONVERT_TO_BYTES(size_bits)>= getOneImageByteLength(omg)){
 			fprintf(stderr, "encoding resulted in negative compression, will"
 			" now regularly write\n");
 			rewind(f);
@@ -169,7 +164,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
   fprintf(stderr, "oneBitWrite(): Specified image is empty. Nothing output\n");
   return;
 }
-void oneBitOutput(OneImage *omg, char *filename){ //keeps older compatability
+void oneBitOutput(OneImage *omg, char *filename){ //keeps older code compatability
 	oneBitWrite(omg,filename,"");// makes the 1bit.0 file
 	return;
 }

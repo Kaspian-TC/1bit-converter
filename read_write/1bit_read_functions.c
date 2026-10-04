@@ -118,9 +118,9 @@ OneImage *read1bitimage(char *filename) {
 	else if(onebit_type == 2){
 		//read size_bits first
 		bytes_read = huffmanDecode(omg->data,file);
-		for (long i = 0; i < bytes_read; i++){
-			printf("%c",omg->data[i]);
-		}
+		//for (long i = 0; i < bytes_read; i++){
+		//	printf("%c",omg->data[i]);
+		//}
 	}
 	
 	fclose(file);

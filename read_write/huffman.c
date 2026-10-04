@@ -17,7 +17,7 @@ typedef struct leaf
 	int left_id,right_id;
 }TreeNode;
 static const int heap_size = 256;
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 static void printBinary_8(uint8_t number){
 	for(int i = 7;i>=0;i--){
@@ -168,8 +168,12 @@ static int assignTreeNodes(TreeNode * tree,MinHeap * min_heap,
 		double leaf1_priority, leaf2_priority;
 		int leaf1_id = heapExtractMin(min_heap,&leaf1_priority);
 		int leaf2_id = heapExtractMin(min_heap,&leaf2_priority);
+#ifdef DEBUG
+
 		printf("leaf1_id: %d leaf2_id: %d\n",leaf1_id,leaf2_id);
 		printf("leaf1_priority: %.1f leaf2_priority: %.1f\n",leaf1_priority,leaf2_priority);
+#endif /* ifdef DEBUG
+		 */
 		assert(leaf1_id != -1 && leaf2_id != -1);
 
 		int new_leaf_id = current_leaf_id;
@@ -316,11 +320,9 @@ size_t huffmanDecode(uint8_t *data,FILE *f){
 		fprintf(stderr, "Error reading head_id in huffmanDecode\n");
 		exit(1);
 	}
-	printf("read in head_id: %d\n",head_id);
 
 	// calculate tree_size 
 	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
-	//printf("read in tree_size: %ld\n",tree_size);
 	
 	// read the tree 
 	TreeNode tree[heap_size];
@@ -328,8 +330,9 @@ size_t huffmanDecode(uint8_t *data,FILE *f){
 		fprintf(stderr, "Error reading head_id in huffmanDecode\n");
 		exit(1);
 	}
+#ifdef DEBUG
 	printTree(tree, heap_size, head_id, 0);
-	
+#endif
 	// compute compress_data_bitlength
 	long compres_data_bitlength = size_bits - sizeof(head_id)*8 - tree_size*8;
 	//allocate space to read in compressed data

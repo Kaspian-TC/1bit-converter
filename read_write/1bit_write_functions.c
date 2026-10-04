@@ -153,9 +153,9 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 			printBinary(data[i]);
 		}*/
 		//in .2 it will first list the total size as to not cause confusion
-		fprintf(f, "%ld\n", size_bits);
-		fwrite(data, CONVERT_TO_BYTES(size_bits), sizeof(uint8_t), f);
-		if(CONVERT_TO_BYTES(size_bits)>= getOneImageByteLength(omg)){
+		//fprintf(f, "%ld\n", size_bits);
+		fwrite(data, CONVERT_TO_BYTES(size_bits) + sizeof(size_bits), sizeof(uint8_t), f);
+		if(CONVERT_TO_BYTES(size_bits)+ sizeof(size_bits)>= getOneImageByteLength(omg)){
 			fprintf(stderr, "encoding resulted in negative compression, will"
 			" now regularly write\n");
 			rewind(f);

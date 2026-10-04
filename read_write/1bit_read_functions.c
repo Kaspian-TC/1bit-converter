@@ -117,14 +117,7 @@ OneImage *read1bitimage(char *filename) {
 	}
 	else if(onebit_type == 2){
 		//read size_bits first
-		long size_bits;
-		buffer_output = fgets(buffer, 1024, file); //read the line in
-		if(buffer_output == NULL){
-			fprintf(stderr, "Error reading file\n");
-			exit(1);
-		}
-		sscanf(buffer, "%ld\n",&size_bits);
-		bytes_read = huffmanDecode(omg->data,file, size_bits);
+		bytes_read = huffmanDecode(omg->data,file);
 		for (long i = 0; i < bytes_read; i++){
 			printf("%c",omg->data[i]);
 		}

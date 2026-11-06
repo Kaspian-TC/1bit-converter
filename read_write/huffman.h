@@ -7,6 +7,6 @@
  * 0 is the left leaf while 1 is the right leaf
 */
 
-uint8_t* huffmanEncode(const uint8_t* data,int byte_length,long* size);
+uint8_t* huffmanEncode(const uint8_t* data,int byte_length,long* size_bits);
 size_t huffmanDecode(uint8_t *data,FILE *f);
 #endif // HUFFMAN_H

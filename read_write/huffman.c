@@ -12,9 +12,9 @@ typedef uint16_t headid_type;
 
 typedef struct leaf
 {
-	int id;
+	uint16_t  id;
 	uint16_t priority;
-	int left_id,right_id;
+	uint16_t left_id,right_id;
 }TreeNode;
 static const int heap_size = 256;
 //#define DEBUG

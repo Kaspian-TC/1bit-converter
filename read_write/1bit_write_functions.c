@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CONVERT_TO_BYTES(X) (ceil(X/8.0))
+#define CONVERT_TO_BYTES(X) ((size_t)ceil(X/8.0))
 
 #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -114,8 +114,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
       fprintf(f, "1bit%s\n",type);
       fprintf(f, "%d %d\n", omg->sx, omg->sy);
 	  if(strcmp(type,"")==0|| strcmp(type,".0")==0){
-		fwrite(omg->data, getOneImageByteLength(omg),
-		 sizeof(uint8_t), f);
+		fwrite(omg->data, getOneImageByteLength(omg),sizeof(uint8_t), f);
 	  }
 	  else if(strcmp(type,".1")==0){
 		uint8_t *runlength_encoded_data;
@@ -146,15 +145,18 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 			byteArray[i] = (uint8_t) inputString[i];
 		}
 		#endif
-		data = huffmanEncode(omg->data,getOneImageByteLength(omg), &size_bits);
-		//in .2 it will first list the total size as to not cause confusion
-		//fprintf(f, "%ld\n", size_bits);
-		fwrite(data, CONVERT_TO_BYTES(size_bits) + sizeof(size_bits), sizeof(uint8_t), f);
-		if(CONVERT_TO_BYTES(size_bits)>= getOneImageByteLength(omg)){
+		size_t omg_length = getOneImageByteLength(omg);
+		data = huffmanEncode(omg->data,omg_length, &size_bits);
+		printf("size_bits: %lu, omg_leng: %lu",CONVERT_TO_BYTES(size_bits) + sizeof(size_bits),omg_length);
+		if(CONVERT_TO_BYTES(size_bits)+ sizeof(size_bits)>= omg_length){
 			fprintf(stderr, "encoding resulted in negative compression, will"
 			" now regularly write\n");
+			fwrite(omg->data, getOneImageByteLength(omg),sizeof(uint8_t), f);
 			rewind(f);
 			fprintf(f, "1bit.0\n");
+		}
+		else {
+			fwrite(data, CONVERT_TO_BYTES(size_bits) + sizeof(size_bits), 1, f);
 		}
 		free(data);
 	  }

@@ -265,11 +265,14 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	}
 
 	// stick all the data together
+	//huffman will first list the total size as to not cause confusion
 	// size_bits + head_id + tree + compressed_data
 	
 	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
 	*size_bits = (long)(sizeof(head_id)*8 + tree_size*8 + compress_data_bitlength);
 	uint8_t* output_data = malloc( sizeof(*size_bits) + ceil(*size_bits/8.0));
+	//if (sizeof(*size_bits) + ceil(*size_bits/8.0)>=data_length){
+	//}
 	printf("size_bits: %lu\n",*size_bits);
 	memcpy(output_data,size_bits,sizeof(*size_bits));
 	printf("%d\n",head_id);
@@ -277,6 +280,8 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bit
 	printf("%d\n",output_data[0]); // not a great check
 	//longer names matter when mistakes cost the difference 
 	// wtf did I mean by that
+	// It means longer variables names are worth it to prevent huge coding errors,
+	// caused by a lack of specificity
 
 	uint8_t* tree_portion_of_byte_array = output_data + sizeof(long) + sizeof(head_id);
 	memcpy(tree_portion_of_byte_array,tree,tree_size);

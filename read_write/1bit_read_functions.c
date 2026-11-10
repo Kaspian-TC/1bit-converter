@@ -1,5 +1,10 @@
 // #include "1bit_funcs.h"
 #include "1bit_read_functions.h"
+#include "huffman.h"
+#include <math.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
@@ -18,7 +23,7 @@ static char assignValues(uint8_t *data,const long pos_1,const int amount, const 
 	return 1;
 }
 
-static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start at the 
+static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start at the being of the data
 	if(length ==0){
 		return 0;
 	}
@@ -29,20 +34,15 @@ static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start a
 	uint8_t current_byte;
 	uint8_t prev_byte;
 	long d_index = 0;
-	long f_index = 0;
 	current_byte = (uint8_t)fgetc(f);
-	f_index++;
 	do{ //stops loop when at eof
 		prev_byte = current_byte;
 		current_byte = (uint8_t)fgetc(f);
-		f_index++;
 		if(current_byte == prev_byte){ //there is a run
 			uint8_t run_length = (uint8_t)fgetc(f);
-			f_index++;
 			assignValues(data,d_index,run_length,length,current_byte);
 			d_index+=run_length;
 			current_byte =(uint8_t)fgetc(f);
-			f_index++;
 		}
 		else{
 			data[d_index] = prev_byte;
@@ -51,15 +51,15 @@ static long runLengthDecode(uint8_t *data,FILE *f,long length){ //f must start a
 	}while(!feof(f) && d_index<length);
 	return d_index;
 }
-static char *basename(char *path) {
-  int l = strlen(path)-1;
-  for (int i = l; i >= 0; i--) {
-    if (path[i] == '/' || path[i] == '\\') {
-      return &path[i+1];
-    }
-  }
-  return path;
-}
+//static char *basename(char *path) {
+//  int l = strlen(path)-1;
+//  for (int i = l; i >= 0; i--) {
+//    if (path[i] == '/' || path[i] == '\\') {
+//      return &path[i+1];
+//    }
+//  }
+//  return path;
+//}
 OneImage *read1bitimage(char *filename) {
 	long bytes_read;
 	char *buffer_output;
@@ -71,24 +71,27 @@ OneImage *read1bitimage(char *filename) {
 	
 	char buffer[1024];
 	char onebit_type;
-	FILE *f = fopen(filename, "rb+");
-	if (f == NULL) {
+	FILE *file= fopen(filename, "rb+");
+	if (file == NULL) {
 		fprintf(stderr,"Unable to open file %s in read1bitimage. Check the path.\n",filename);
 		exit(1);
 	}
-	buffer_output = fgets(buffer, 1024, f);//Read and check header
+	buffer_output = fgets(buffer, 1024, file);//Read and check header
 	if (strcmp(buffer, "1bit\n") == 0 || strcmp(buffer, "1bit.0\n") == 0 ) {
 		onebit_type = 0;
 	}
 	else if (strcmp(buffer, "1bit.1\n") == 0) {
 		onebit_type = 1;
 	}
+	else if (strcmp(buffer, "1bit.2\n") == 0) {
+		onebit_type = 2;
+	}
 	else{
 		fprintf(stderr, "%s: Wrong file format, not a .1bit file.\n", filename);
 		exit(1);
 	}
 	
-	do { buffer_output = fgets(buffer, 1024, f); //Skip over comments
+	do { buffer_output = fgets(buffer, 1024, file); //Skip over comments
 		if(buffer_output == NULL){
 			fprintf(stderr, "Error reading file\n");
 			exit(1);
@@ -103,17 +106,24 @@ OneImage *read1bitimage(char *filename) {
 		exit(1);
 	}
 	if(onebit_type == 0){
-		bytes_read = fread(omg->data, sizeof(uint8_t), (size_t)ceil((float)(omg->sx* omg->sy)/8), f);
+		bytes_read = fread(omg->data, sizeof(uint8_t), (size_t)ceil((float)(omg->sx* omg->sy)/8), file);
 		if(bytes_read<(omg->sx * omg->sy)/8){
 			fprintf(stderr, "expected read value %d while actually read %ld\n",(omg->sx * omg->sy)/8,bytes_read);
 			exit(1);
 		}
 	}
 	else if(onebit_type == 1){
-		bytes_read = runLengthDecode(omg->data,f,ceil((float)(omg->sx* omg->sy)/8));
+		bytes_read = runLengthDecode(omg->data,file,getOneImageByteLength(omg));
+	}
+	else if(onebit_type == 2){
+		//read size_bits first
+		bytes_read = huffmanDecode(omg->data,file);
+		//for (long i = 0; i < bytes_read; i++){
+		//	printf("%c",omg->data[i]);
+		//}
 	}
 	
-	fclose(f);
+	fclose(file);
 
 	return omg;
 }

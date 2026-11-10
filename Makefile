@@ -19,13 +19,13 @@ $(EXE_NAME): $(OBJS)
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-release: CFLAGS +=-O3
+release: CFLAGS +=-Os -s
 release: $(EXE_NAME)
 
 INPUT_PPM = david
 1BIT_FILE = david
 PNG_NAME = david.png
-1BIT_VER = .0
+1BIT_VER = .2
 
 # phony targets to help with testing
 create: $(EXE_NAME)

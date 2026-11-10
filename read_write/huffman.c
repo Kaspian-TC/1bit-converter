@@ -1,34 +1,37 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include "../data_types/minheap.h"
 #include "huffman.h"
 #include "../data_types/bitrun.h"
+
+typedef uint16_t headid_type;
+
 typedef struct leaf
 {
-	int id;
-	float priority;
-	int left_id,right_id;
-	float left_priority,right_priority;
+	uint16_t  id;
+	uint16_t priority;
+	uint16_t left_id,right_id;
 }TreeNode;
+static const int heap_size = 256;
+//#define DEBUG
 #ifdef DEBUG
-static void printBinary(uint16_t number){
-	for(int i = 15;i>=0;i--){
+static void printBinary_8(uint8_t number){
+	for(int i = 7;i>=0;i--){
 		printf("%d",number>>i & 1);
 	}
 	return;
 }
 static void printLeaf(TreeNode leaf){
 	printf("id: %d\n",leaf.id);
-	printf("priority: %f\n",leaf.priority);
+	printf("priority: %d\n",leaf.priority);
 	printf("children: left: %d right: %d\n",leaf.left_id,leaf.right_id);
-	printf("child_priorities: left: %f right:%f\n",leaf.left_priority,
-	leaf.right_priority);
-
 	return;
 }
-static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
+static void printTree(TreeNode* combined_leaves,int size,uint16_t head_id,int depth){
 	if(head_id < size){ //one of the leaf nodes
 		printf("leaf: %c\n",head_id);
 		return;
@@ -63,28 +66,28 @@ static void printTree(TreeNode* combined_leaves,int size,int head_id,int depth){
  * @param current_run 
  */
 static void assignEncodedBits(Bitrun * encoded_bits[],
-			const TreeNode* combined_leaves, const int size, const int head_id,
-			const float head_priority, const Bitrun * current_run,int depth){
-	if(head_id < size){ //one of the leaf nodes
+			const TreeNode* combined_leaves, const int combined_leaves_size, const uint16_t head_id,
+			const Bitrun * current_run,int depth){
+	if(head_id < combined_leaves_size){ //one of the leaf nodes
 		assert(encoded_bits[head_id] == NULL);
 		encoded_bits[head_id] = createAndCopyBitrun(current_run);
 		return;
 	}
 	// Find the left and right then recurse, make sure to bit shift and add 1 
-	// if right, 0 if left 1
-	TreeNode head = combined_leaves[head_id-size];
+	// if right, 1 if left 0
+	TreeNode head = combined_leaves[head_id-combined_leaves_size];
 	//  Call left child
 	//bit shift left
 	Bitrun * left_run = shiftAndAdd(createAndCopyBitrun(current_run),false);
-	assignEncodedBits(encoded_bits,combined_leaves,size,head.left_id,
-	head.left_priority,left_run,depth+1);
+	assignEncodedBits(encoded_bits,combined_leaves,combined_leaves_size,head.left_id,
+	left_run,depth+1);
 	freeBitrun(left_run);
 
 	// Call right child
 	//bit shift left and add 1
 	Bitrun * right_run = shiftAndAdd(createAndCopyBitrun(current_run),true); 
-	assignEncodedBits(encoded_bits,combined_leaves,size,head.right_id,
-	head.right_priority,right_run,depth+1);
+	assignEncodedBits(encoded_bits,combined_leaves,combined_leaves_size,head.right_id,
+	right_run,depth+1);
 	freeBitrun(right_run);
 	return;
 }
@@ -101,8 +104,8 @@ static void assignEncodedBits(Bitrun * encoded_bits[],
  */
 static TreeNode assignNewLeaf(const int new_leaf_id,const int leaf1_id,
 						const int leaf2_id,
-						const float leaf1_priority,
-						const float leaf2_priority){
+						const uint16_t leaf1_priority,
+						const uint16_t leaf2_priority){
 	float new_leaf_priority = leaf1_priority + leaf2_priority;
 	TreeNode new_leaf;
 	
@@ -110,16 +113,14 @@ static TreeNode assignNewLeaf(const int new_leaf_id,const int leaf1_id,
 		new_leaf = (TreeNode) {
 			new_leaf_id, // int id
 			new_leaf_priority, // float priority;
-			leaf2_id,leaf1_id, // int left_id,right_id;
-			leaf2_priority,leaf1_priority // float left_priority,right_priority;
+			leaf2_id,leaf1_id // int left_id,right_id;
 		};
 	}
 	else{
 		new_leaf = (TreeNode) {
 			new_leaf_id, 
 			new_leaf_priority,
-			leaf1_id,leaf2_id,
-			leaf1_priority,leaf2_priority
+			leaf1_id,leaf2_id
 		};
 	}
 	return new_leaf;
@@ -136,9 +137,10 @@ static MinHeap * createNewHuffmanHeap(const int heap_size,const uint8_t* data,
 	MinHeap * min_heap = newMinHeap(heap_size);
 	unsigned long number_of_hits[heap_size];
 	// Sets number of hits to zero
-	for (int i = 0; i < heap_size; i++) {
+	memset(number_of_hits, 0, sizeof(number_of_hits));
+	/*for (int i = 0; i < heap_size; i++) {
 		number_of_hits[i] = 0;
-	}
+	}*/
 	// Adds all occurences of values
 	for(long i = 0; i < data_length; i++){
 		number_of_hits[data[i]]++;
@@ -146,7 +148,6 @@ static MinHeap * createNewHuffmanHeap(const int heap_size,const uint8_t* data,
 	unsigned long total_zero_values = 0;
 	for (int i = 0; i < heap_size; i++) {
 		if(number_of_hits[i] > 0){
-			// printf("%d: %ld\n",i,number_of_hits[i]);
 			heapPush(min_heap,i,number_of_hits[i]);
 		}
 		else{
@@ -167,19 +168,25 @@ static int assignTreeNodes(TreeNode * tree,MinHeap * min_heap,
 		double leaf1_priority, leaf2_priority;
 		int leaf1_id = heapExtractMin(min_heap,&leaf1_priority);
 		int leaf2_id = heapExtractMin(min_heap,&leaf2_priority);
-		// printf("leaf1_id: %d leaf2_id: %d\n",leaf1_id,leaf2_id);
-		// printf("leaf1_priority: %.1f leaf2_priority: %.1f\n",leaf1_priority,leaf2_priority);
+#ifdef DEBUG
+
+		printf("leaf1_id: %d leaf2_id: %d\n",leaf1_id,leaf2_id);
+		printf("leaf1_priority: %.1f leaf2_priority: %.1f\n",leaf1_priority,leaf2_priority);
+#endif /* ifdef DEBUG
+		 */
 		assert(leaf1_id != -1 && leaf2_id != -1);
 
 		int new_leaf_id = current_leaf_id;
 		TreeNode new_leaf = assignNewLeaf(new_leaf_id,leaf1_id,leaf2_id,
-									leaf1_priority,leaf2_priority);
-		tree[current_leaf_id-256] = new_leaf;
+									(uint16_t)leaf1_priority,(uint16_t)leaf2_priority);
+		// TODO: why does it look at this value?
+		assert(current_leaf_id-heap_size >=0);
+		tree[current_leaf_id-heap_size] = new_leaf;
 		current_leaf_id++;
 		
 		heapPush(min_heap,new_leaf.id,new_leaf.priority);
 	}
-	int head_id = heapExtractMin(min_heap,head_priority);
+	uint16_t head_id = heapExtractMin(min_heap,head_priority);
 	return head_id;
 }
 uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
@@ -201,9 +208,8 @@ uint8_t* compressData(Bitrun * encoded_bits[],const int encoded_bits_size,
 	*size = output_data_index;
 	return output_data;
 }
-uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
+uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size_bits){
 	// Make heap_size = 256 because that is the max amount of possible values
-	const int heap_size = 256;
 	// needs to be 2*heap_size because of the extra nodes that are created
 	MinHeap * min_heap = createNewHuffmanHeap(heap_size*2,data,data_length);
 	if(min_heap == NULL){
@@ -213,35 +219,43 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 	}
 	TreeNode tree[heap_size];
 	double head_priority;
-	int head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
+	headid_type head_id = assignTreeNodes(tree,min_heap,heap_size,&head_priority);
 	freeHeap(min_heap); //shouldn't be required after
 
 	// If uint256_t existed in c99, then this would be much better
 	// Until I can figure that out, I will work with my current solution
 	
-	// Should be in another function
+	// TODO: Should be in another function
 	Bitrun * encoded_bits[heap_size];
-	for (int i = 0; i < heap_size; i++)
-	{
-		encoded_bits[i] = NULL;
-	}
+	memset(encoded_bits, 0, sizeof(encoded_bits));
+
 	Bitrun * starting_run = createBitRun();
 	starting_run = shiftAndAdd(starting_run,true);
-	assignEncodedBits(encoded_bits,tree,heap_size,head_id,head_priority,
+	assignEncodedBits(encoded_bits,tree,heap_size,head_id,
 	starting_run,0);
 	freeBitrun(starting_run);
 	
 	#ifdef DEBUG
-	for(int i = 0;i<heap_size;i++){
-		if(encoded_bits[i] != NULL){
-			printf("%c: ",i);
-			printBitrun(encoded_bits[i]);
-		}
-	}
+	//for(int i = 0;i<heap_size;i++){
+	//	if(encoded_bits[i] != NULL){
+	//		printf("%c: ",i);
+	//		printBitrun(encoded_bits[i]);
+	//	}
+	//}
+	printTree(tree, heap_size, head_id, 0);
 	#endif
-	long compress_data_size;
+	long compress_data_bitlength;
 	uint8_t* compressed_data = compressData(encoded_bits,
-	heap_size,data,data_length,&compress_data_size);
+	heap_size,data,data_length,&compress_data_bitlength);
+
+#ifdef DEBUG
+	printf("Print compressData: ");
+	for (size_t i = 0; i < ceil(compress_data_bitlength/8.0); i++){
+		printBinary_8(compressed_data[i]);
+	}
+	printf("\n%ld\n",compress_data_bitlength);
+#endif /* ifdef DEBUG */
+	
 	
 	//free all bitruns 
 	for(int i = 0;i<heap_size;i++){
@@ -249,21 +263,100 @@ uint8_t* huffmanEncode(const uint8_t* data, const int data_length,long* size){
 			freeBitrun(encoded_bits[i]);
 		}
 	}
-	size_t tree_size = sizeof(TreeNode) * heap_size;
 
-	// printf("tree: %d, compress_data: %ld\n",tree_size,compress_data_size);
-	*size = (long)(sizeof(uint8_t) + tree_size + sizeof(uint8_t)*compress_data_size);
-	uint8_t* output_data = malloc(*size);
-	output_data[0] = head_id;
+	// stick all the data together
+	//huffman will first list the total size as to not cause confusion
+	// size_bits + head_id + tree + compressed_data
+	
+	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
+	*size_bits = (long)(sizeof(head_id)*8 + tree_size*8 + compress_data_bitlength);
+	uint8_t* output_data = malloc( sizeof(*size_bits) + ceil(*size_bits/8.0));
+	//if (sizeof(*size_bits) + ceil(*size_bits/8.0)>=data_length){
+	//}
+	printf("size_bits: %lu\n",*size_bits);
+	memcpy(output_data,size_bits,sizeof(*size_bits));
+	printf("%d\n",head_id);
+	memcpy(output_data + sizeof(*size_bits),&head_id,sizeof(head_id));
+	printf("%d\n",output_data[0]); // not a great check
 	//longer names matter when mistakes cost the difference 
-	uint8_t* tree_portion_of_byte_array = output_data + 1;
+	// wtf did I mean by that
+	// It means longer variables names are worth it to prevent huge coding errors,
+	// caused by a lack of specificity
+
+	uint8_t* tree_portion_of_byte_array = output_data + sizeof(long) + sizeof(head_id);
 	memcpy(tree_portion_of_byte_array,tree,tree_size);
+
 	uint8_t* data_portion_of_byte_array = tree_portion_of_byte_array + tree_size;
-	memcpy(data_portion_of_byte_array,compressed_data,compress_data_size);
-	/* Takes byte array and assigns it to the tree_size, useful in reading code 
-	TreeNode new_tree[heap_size];
-	memcpy(new_tree,byte_array,tree_size);
-	*/
+	memcpy(data_portion_of_byte_array,compressed_data,ceil(compress_data_bitlength/8.0));
 	
 	return output_data;
 }
+static long uncompressHuffmanData(TreeNode * tree, headid_type head_id, 
+		uint8_t * compressed_data, long compress_data_bitlength,
+		uint8_t * data){
+	headid_type current_node = head_id;
+	long data_index = 0;
+	for (long i = 0; i < compress_data_bitlength; i++){
+		bool bit = compressed_data[i/8] >> (7-i%8) & 1;
+		if (bit){ // 1, right 
+			current_node = tree[current_node-heap_size].right_id;
+		}
+		else{// 0, left
+			current_node = tree[current_node-heap_size].left_id;
+		}
+		if (current_node < heap_size){
+			data[data_index++] = current_node;
+			current_node = head_id;
+		}
+	}
+	return data_index;
+}
+size_t huffmanDecode(uint8_t *data,FILE *f){
+
+	// get size_bits 
+	long size_bits;
+	if (fread(&size_bits, sizeof(size_bits), 1,f)==0){
+		fprintf(stderr, "Error reading size_bits in huffmanDecode\n");
+		exit(1);
+	}
+	// get the head_id
+	headid_type head_id;
+	if (fread(&head_id, sizeof(head_id), 1,f)==0){
+		fprintf(stderr, "Error reading head_id in huffmanDecode\n");
+		exit(1);
+	}
+
+	// calculate tree_size 
+	const size_t tree_size = sizeof(TreeNode)*(head_id-heap_size + 1);
+	
+	// read the tree 
+	TreeNode tree[heap_size];
+	if (fread(tree, sizeof(TreeNode), head_id-heap_size + 1,f)==0){
+		fprintf(stderr, "Error reading head_id in huffmanDecode\n");
+		exit(1);
+	}
+#ifdef DEBUG
+	printTree(tree, heap_size, head_id, 0);
+#endif
+	// compute compress_data_bitlength
+	long compres_data_bitlength = size_bits - sizeof(head_id)*8 - tree_size*8;
+	//allocate space to read in compressed data
+	uint8_t * compressed_data = malloc(ceil(compres_data_bitlength/8.0));
+	//read the compressed_data (read all data in)
+	if (fread(compressed_data,sizeof(uint8_t),ceil(compres_data_bitlength/8.0),f) == 0){
+		fprintf(stderr, "Error reading compressed_data in huffmanDecode\n");
+		exit(1);
+	}
+#ifdef DEBUG
+	printf("Print compressed_data: ");
+	for (size_t i = 0; i < ceil(compres_data_bitlength/8.0); i++){
+		printBinary_8(compressed_data[i]);
+	}
+	printf("\n%ld\n",compres_data_bitlength);
+#endif /* ifdef DEBUG */
+	//uncompress compressed_data
+	long bytes_read = uncompressHuffmanData(tree, head_id, compressed_data, compres_data_bitlength, data);
+	
+	return bytes_read;
+}
+

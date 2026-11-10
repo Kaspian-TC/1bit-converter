@@ -1,12 +1,17 @@
 #include "1bit_write_functions.h"
 #include "huffman.h"
 #include <math.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#define CONVERT_TO_BYTES(X) ((size_t)ceil(X/8.0))
+
 #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h" //this should only be included here since this is the WRITE file
 #endif
+#define DEBUG
 
 static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	for(int i = 0;i<length;i++){
@@ -14,12 +19,15 @@ static void copyData(uint8_t* dest, const uint8_t* src,long length){
 	}
 	return;
 }
-/*static void printBinary(uint8_t number){
+//static size_t CONVERT_TO_BYTES(size_t bits){
+//	return ceil(bits/8.0);
+//}
+static void printBinary(uint8_t number){
 	for(int i = 7;i>=0;i--){
 		printf("%d",number>>i & 1);
 	}
 	return;
-}*/
+}
 static uint8_t* runLengthEncode(const uint8_t* data,size_t length ,size_t* size){ //encodes the data with run length encoding
 	//if there is negative compression, makes new_data identical to data
 	/*aaaabbbbcdddddee will become aa4bb4cdd5ee2 unless there is negative compression in which case it will exit with NULL*/
@@ -94,6 +102,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 	strcmp(type,".1")==0 || strcmp(type,".2")==0)
 	){
 		fprintf(stderr, "oneBitWrite(): wrong type\n");
+		return;
 	}
     if (omg->data != NULL) {
       FILE *f = fopen(filename, "wb+");
@@ -105,8 +114,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
       fprintf(f, "1bit%s\n",type);
       fprintf(f, "%d %d\n", omg->sx, omg->sy);
 	  if(strcmp(type,"")==0|| strcmp(type,".0")==0){
-		fwrite(omg->data, (size_t)ceil((float)(omg->sx* omg->sy)/8),
-		 sizeof(uint8_t), f);
+		fwrite(omg->data, getOneImageByteLength(omg),sizeof(uint8_t), f);
 	  }
 	  else if(strcmp(type,".1")==0){
 		uint8_t *runlength_encoded_data;
@@ -126,11 +134,10 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 	  }
 	  else if (strcmp(type,".2")==0) // huffman encoding
 	  {
-		printf("huffman encoding is not supported, select another type\n");
-		/*
 		uint8_t *data;
-		long size;
-		size = 0;
+		long size_bits;
+		size_bits = 0;
+
 		#ifdef DEBUG
 		const char *inputString = "A_DEAD_DAD_CEDED_A_BAD_BABE_A_BEADED_ABACA_BED";
 		uint8_t byteArray [strlen(inputString)];
@@ -138,22 +145,20 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
 			byteArray[i] = (uint8_t) inputString[i];
 		}
 		#endif
-		data = huffmanEncode(omg->data,ceil((float)(omg->sx* omg->sy)/8),
-		&size);
-		for(int i = 0;i<size/8+1;i++){
-			printBinary(data[i]);
-			// printf("%d ",data[i]);
-		}
-		//in .2 it will first list the total size as to not cause confusion
-		fprintf(f, "%ld\n", size);
-		fwrite(data, (size_t)(size), sizeof(uint8_t), f);
-		if((size/8+1)>=ceil((float)(omg->sx* omg->sy)/8)){
+		size_t omg_length = getOneImageByteLength(omg);
+		data = huffmanEncode(omg->data,omg_length, &size_bits);
+		printf("size_bits: %lu, omg_leng: %lu",CONVERT_TO_BYTES(size_bits) + sizeof(size_bits),omg_length);
+		if(CONVERT_TO_BYTES(size_bits)+ sizeof(size_bits)>= omg_length){
 			fprintf(stderr, "encoding resulted in negative compression, will"
 			" now regularly write\n");
+			fwrite(omg->data, getOneImageByteLength(omg),sizeof(uint8_t), f);
 			rewind(f);
 			fprintf(f, "1bit.0\n");
 		}
-		free(data);*/
+		else {
+			fwrite(data, CONVERT_TO_BYTES(size_bits) + sizeof(size_bits), 1, f);
+		}
+		free(data);
 	  }
       fclose(f);
       return;
@@ -161,7 +166,7 @@ void oneBitWrite(OneImage *omg, char *filename, char *type) { //outputs to 1bit 
   fprintf(stderr, "oneBitWrite(): Specified image is empty. Nothing output\n");
   return;
 }
-void oneBitOutput(OneImage *omg, char *filename){ //keeps older compatability
+void oneBitOutput(OneImage *omg, char *filename){ //keeps older code compatability
 	oneBitWrite(omg,filename,"");// makes the 1bit.0 file
 	return;
 }
